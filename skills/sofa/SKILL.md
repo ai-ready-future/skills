@@ -54,10 +54,11 @@ Check these before step 2. If one is missing, tell the user the exact install st
 
 1. Read `docs/adlc.md` from `main`.
 2. Check the board tool access. If a user step is necessary (for example a token scope), start chores first.
-3. For each role in section 3 (not orchestrator), start 1 session with the command in section 8. Use the model and the effort from the roles table. Use the absolute main folder.
+3. For each role in section 3 (not orchestrator), start 1 session with the 2 steps in section 8. Use the colour, the model and the effort from the roles table. If the roles table has no Colour column (a `docs/adlc.md` from before the colours), use the colour of the role in `templates/ADLC.md`. Use the absolute main folder.
 4. Wait for a `DONE` message from each session. Use `ListAgents` to see which sessions are live.
 5. Start the status check: `/loop 10m` (orchestrator details in section 3).
 6. Tell the user how to open hitl and retro: `claude agents`, then `claude attach <id>`.
+7. You cannot run `/color` in this session. Tell the user to type `/color <orchestrator colour>` here (`/color purple` in the template), so that the orchestrator has its role colour.
 
 ## Step 4 — Run the team
 
