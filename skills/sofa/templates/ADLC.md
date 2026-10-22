@@ -1,11 +1,11 @@
 # ADLC — Agent Development Life Cycle
 
-<!-- sofa-template-version: 2 -->
+<!-- sofa-template-version: 3 -->
 
 This file defines the agent team for this repository.
 The `sofa` skill reads this file to start the team.
-Every session reads its role from this file on `main`.
-The retro session is the only owner of this file.
+Every session reads this file on `main`, then its role files (section 3, "Role files").
+The retro session is the only owner of this file and of `docs/adlc/roles/`.
 
 ## 1. Setup values
 
@@ -18,7 +18,8 @@ The `sofa` skill fills these values when it copies the template.
 | Board tool | `<GitHub Projects \| Linear \| Jira \| none>` |
 | GitHub account | `<gh account>` |
 | Team prefix | `<prefix>` (session names are `<prefix>-<role>[-n]`) |
-| Orchestrator name | `<name shown by ListAgents>` |
+| Orchestrator name | `<prefix>-orchestrator` |
+| Skill folder | `<absolute path of the installed sofa skill, for example /home/<user>/.claude/skills/sofa>` |
 | Product docs | `docs/product/prd`, `docs/product/roadmap` |
 | System design | `docs/product/system-design.md`, or `none` |
 | ADR folder | `docs/adr`. The list of ADRs and their status is in `docs/adr/README.md` |
@@ -39,7 +40,7 @@ Repository rules:
 3. Send all messages to the orchestrator with `SendMessage`. Do not send messages to other roles directly.
 4. Do not ask the user questions. Send the question to the orchestrator. The hitl session asks the user. Exceptions: hitl, retro, and chores (only to guide the user through a manual step).
 5. Use the message format in section 5.
-6. When the orchestrator tells you that `docs/adlc.md` changed, read it again and rebase your worktree on `main`.
+6. When the orchestrator tells you that `docs/adlc.md` or a role file changed, read `docs/adlc.md` and your role files again, and rebase your worktree on `main`.
 7. Never read, print or commit secrets or key files.
 8. Write all documents in ASD-STE100 Simplified Technical English.
 9. When you finish a task, send a `DONE` message. Then wait for the next message.
@@ -67,7 +68,7 @@ Repository rules:
 
 | Role | Colour | Model | Effort | Count | Starts when | Skills | Input | Output |
 |---|---|---|---|---|---|---|---|---|
-| orchestrator | `purple` | `claude-opus-5-5` | `medium` | 1 | The `sofa` skill runs | sofa | Messages from all roles | Routed messages, started sessions |
+| orchestrator | `purple` | `claude-opus-5-5` | `medium` | 1 | The `sofa` skill starts it | loop | Messages from all roles | Routed messages, started sessions |
 | hitl | `yellow` | `claude-sonnet-5-5` | `medium` | 1 | Always running | — | `ASK` messages | `ANSWER` messages |
 | retro | `pink` | `claude-opus-5-5` | `medium` | 1 | The user changes or adds a role | — | `RETRO` signal | Updated `docs/adlc.md` on `main` |
 | planner | `cyan` | `claude-opus-5-5` | `medium` | 1 | Scope change, gap in PRD or roadmap, milestone done | prd:plan, prd:review, prd:explore | Gap or change | PR that updates PRD or roadmap |
@@ -82,124 +83,16 @@ Repository rules:
 
 Model and Effort: use the exact values in the table.
 
-Colour: the session colour that the built-in `/color` sets. It shows in the prompt border and in `claude agents`. The names are `red`, `blue`, `green`, `yellow`, `purple`, `orange`, `pink` and `cyan`. A fixed `/color` also stops the productivity session colour mod in that session, so the colour does not change with the topic.
+Colour: the session colour that the built-in `/color` sets. It shows in the prompt border and in `claude agents`. The names are `red`, `blue`, `green`, `yellow`, `purple`, `orange`, `pink` and `cyan`. The mod of the `sofa` skill sets it when a session starts: it reads this table, and finds the role in the session name (`<prefix>-<role>[-n]`). This also stops the productivity session colour mod in that session, so the colour does not change with the topic.
 
-### Role details
+### Role files
 
-**orchestrator**
-- Keep a queue of features in roadmap order.
-- As soon as a story gets the state `ready` on `main`, assign its spec to a free implementer at once. If no implementer is free, start a new implementer (the maximum is 4). Do not wait for other stories or features.
-- Start a feature only when the features it depends on are merged, unless a user `ANSWER` allows an early start (rule 11).
-- Run 2 features at the same time only if they do not change the same area.
-- Start more implementers, reviewers and verifiers when the queue grows. The maximum is 4 of each.
-- Send each code PR to a reviewer and to a verifier at the same time. Send a document PR or a test PR only to a reviewer.
-- Send the test scenarios of each verifier to the tester.
-- Start a second specifier when 2 features are ready for a spec. The maximum is 2 specifiers.
-- Give each `ASK` a priority before you send it to hitl: `blocks code now` or `blocks later`.
-- An `ASK` with a `revisit:` line goes to the owner of the page: the planner for a PRD decision, the architect for an ADR. An `ASK` with the line `owner: planner` goes to hitl in the batch of its feature. Send the `ANSWER` of a rule card or of an `owner: planner` card to the specifier and the planner. If the chosen option names a change to an accepted ADR, also send it to the architect. The architect changes that ADR in an ADR PR that names the `ANSWER`.
-- Stop extra sessions when they have no work.
-- After a retro merge, tell every live session to read `docs/adlc.md` again.
-- After a PR that changes `docs/product` merges, send a `SYNC` to the projecter.
-- Keep a short status table in the orchestrator session. Do not write it to the repo.
-- If the orchestrator session name changes, the retro updates section 1 and the orchestrator sends `RELOAD`.
-- Send each `BLOCKED` (rule 14) on, by its tag:
-  - `user step`: send it to chores. Chores guides the user through the step.
-  - `decision`: send it to hitl as an `ASK` with the priority `blocks code now`.
-  - `team`: send it to the role that must act.
+The work of each role is in its role files. A session reads them after this file:
 
-  When the cause is gone, send a `TASK` to the blocked session with the cause that is gone and the next step (for example `TASK · orchestrator → tester-1 · the token has the workflow scope: push the CI commit`).
-- Status check every 10 minutes (`/loop 10m`, started when the orchestrator starts, or after a `RELOAD` if it does not run). The result: the status table matches the live sessions, and each stuck session gets 1 `STATUS` message. A session is stuck if 1 of these is true:
-  - It is idle, it has an open item in the table, and it sent no message for that item.
-  - Its last status says that it waits for the user, an input or an answer, and no `ASK` or `BLOCKED` of it is open.
-  - It is busy and its timeline has no new line for 30 minutes.
+1. The skill role file: `<skill folder>/references/roles/<role>.md` (the skill folder is in section 1).
+2. The repository role file: `docs/adlc/roles/<role>.md`, if it exists. The retro writes it.
 
-  The state of a session is in `ListAgents` and in its job folder in `~/.claude/jobs/`: the `state.json` that has the session name, and the last line of `timeline.jsonl`. The check sends no other messages, changes no files and restarts no sessions, because each message and each restart interrupts the work of a session.
-
-**hitl**
-- The only session that asks the user for decisions.
-- Use the card in section 7 for each question. Use the same card format each time.
-- Ask the cards in priority order. First ask the cards that block code now, then the cards that block later.
-- Ask the cards of 1 feature together, up to 4 cards at a time. Use `AskUserQuestion` when the options are fixed (it takes up to 4 questions).
-- Send the answer to the orchestrator as an `ANSWER` message.
-
-**retro**
-- Starts when the orchestrator sends `RETRO`.
-- Asks the user directly what to change and why.
-- Updates `docs/adlc.md` with a short worktree, PR and merge loop (section 6).
-- Sends the orchestrator a `DONE` message with a summary of the changes.
-- Records each change in section 9.
-
-**planner**
-- Reads and updates the PRD and the roadmap with the prd skills.
-- Lands each change through a PR.
-- After the user answers a rule card (section 4, "Ask the Rule"), writes 1 PRD decision page for the rule. The page has the line `Principle: <rule>.` with the rule word for word from the chosen option, and the date of the answer. Sends no card for this page. If the chosen option named a change to a PRD decision, changes that page in the same PR.
-- When a rule page changes, runs the drift check and sends 1 `TASK` to the orchestrator for 1 follow-up feature. Asks a card only for a done feature that the new answer did not name.
-
-**projecter**
-- Copies the roadmap on `main` to the board tool. Never edits the board in a way that `main` does not show.
-- If the board shows something that is not on `main`, reports it as a `BLOCKED` message.
-
-**architect**
-- Answers design questions with the ADRs.
-- If the ADR folder does not exist, creates it with `adr:scaffolding-adr-corpora`. If the ADR folder has no index (`README.md`), makes it with `adr:indexing-adrs` before the first answer.
-- Lands new or changed ADRs through a PR.
-- Decides each ADR finding from a reviewer (section 4, "ADR finding flow"). Gives 1 verdict: `no ADR change`, `contradicts ADR-NNNN`, or `needs an ADR`.
-- For `contradicts` and `needs an ADR`, sends an `ASK` to the orchestrator with the options and a recommendation. Does not write or change an ADR before the `ANSWER`.
-- After the `ANSWER`, writes the new or changed ADR with `status: proposed` and lands it through a PR. The ADR names the `ANSWER`. Then the architect sends an `ASK` for the card that accepts the ADR.
-- After a spec PR with the ADR of a rule merges (section 4, "Ask the Rule"), sets that ADR to `status: accepted` in an ADR PR and names the `ANSWER` of the rule card. The `ANSWER` is the card that accepts it. No second card is necessary.
-
-**specifier**
-- One feature gives one spec.
-- Writes the spec in the feature folder with `prd:specifying-stories`.
-- Lands the spec through a PR. The orchestrator assigns the spec to an implementer after the merge.
-- In the spec PR, sets the stories of the feature to `ready` only if the feature is not blocked (rule 11). If the feature is blocked, the stories stay in `backlog`.
-- Uses effort `xhigh`. The goal is a specifier that needs the user as little as possible.
-- Infers each decision from the ADRs, the system design (section 1), the PRD and the merged specs first. Records the source of each inferred decision in the spec.
-- Does not ask the user to confirm a decision that an ADR or the system design states, or that is clearly inferred from them.
-- Asks the user with the method "Ask the Rule" (section 4). It asks for the rule, not for the value. It infers each detail from the rule and records the source of each detail.
-
-**implementer**
-- One spec gives one PR.
-- Works in its own worktree. Uses relay in non-interactive mode.
-- Runs the build command of section 1 (tests and lint included) before it opens the PR.
-- Sends `REVIEW` with the PR number.
-- Fixes the comments when the reviewer or the verifier requests changes.
-- After the reviewer and the verifier approve: merges the PR, then runs `productivity:wrapping-up-sessions`. No worktree or branch must stay after the merge.
-
-**reviewer**
-- Reviews a PR with `pr-flow:reviewing-prs`.
-- Checks the code and the tests against the spec criteria and the ADRs. The verifier runs the product.
-- Checks ADR adherence on each PR with `adr:reviewing-adr-adherence`. Looks for 2 problems: a change that contradicts an accepted ADR, and a change that is expensive to undo and has no ADR.
-- Does not decide an ADR finding alone. Requests changes, writes the finding in the PR comment, and sends it to the orchestrator for the architect (section 4, "ADR finding flow").
-- In a spec PR, opens the source of each inferred row (section 4, "Ask the Rule"). Requests changes if the source does not support the choice, if a stronger source disagrees, or if a hard-to-undo change is not named on a card.
-- Posts the result as a PR comment. The first line is `VERDICT: APPROVE` or `VERDICT: CHANGES`. The second line is `Role: reviewer`. The account cannot approve its own PR, so the reviewer does not use `gh pr review`.
-- Document PRs (only files in `docs/` change): if a fix does not block, give the exact text of the fix with the approval. The author applies this text and merges with no new check. Code PRs and test PRs always get a new check after a fix.
-- Sends the result to the orchestrator.
-- Security review (when a spec asks for one): the orchestrator gives it to a reviewer session that wrote none of the code under review. The session reviews the commit of `main` that the spec names, writes the result in a docs PR, and opens one issue with the label `security` for each open medium or low finding. The issue names the place and the fix, and gives no steps of an attack. A different reviewer session reviews that PR.
-
-**verifier**
-- Checks a code PR against the criteria of its spec. Runs the product from the PR branch as a user does (the "Run" row of section 1). Does not review the code (the reviewer does that).
-- For a CLI, builds the binary and runs it in a terminal. For a web app, uses Playwright (`ui-judge` skills) to go to the pages and use them.
-- Uses real input and the real program. No mocks.
-- Builds and runs the PR head in its own worktree (`git worktree add --detach <path> <PR head>`), never in the main folder. Removes the worktree after the result.
-- Writes in the PR comment each command or step, the result, and the spec criterion that it checks.
-- Posts the result as a PR comment. The first line is `VERDICT: APPROVE` or `VERDICT: CHANGES`. The second line is `Role: verifier`. The account cannot approve its own PR, so the verifier does not use `gh pr review`.
-- Sends the result to the orchestrator. Also sends a list of test scenarios for the tester. Each scenario gives the steps, the expected result and the spec criterion.
-
-**tester**
-- Writes and keeps the e2e tests. The tests check only the final user functions, as a QA engineer does.
-- A test runs the built program as a user does: commands in a terminal, a local script, Playwright in a browser, or another e2e method.
-- No mocks and no unit tests.
-- Writes tests from the scenarios of the verifiers. Changes or removes a test when a spec changes the behavior.
-- Before the first test, sends a design question to the orchestrator for the architect: where the tests go and how they run. The architect records the answer in an ADR. If an accepted ADR already answers this, uses that ADR.
-- A test PR changes only the e2e tests in the place that the ADR of the tester names.
-- Runs all e2e tests before it opens the PR. Sends `REVIEW` with the PR number. A reviewer checks the PR. After the approval, merges it with squash (rule 12).
-- Does not change the product code. If a test fails on `main`, sends a `BLOCKED` message with the scenario and the output.
-
-**chores**
-- Does manual setup steps that do not need the user (for example: labels, checks, config).
-- If the user must do a step (login, token scope, payment), guides the user directly through the step. Gives the exact commands, 1 step at a time, and checks the result after each step.
-- Sends decisions (a choice between options) to the orchestrator as `ASK`. The hitl session asks the user.
+Where the two files differ, the repository role file wins. A role that is only in this repository has only a repository role file.
 
 ## 4. Feature flow
 
@@ -284,13 +177,13 @@ Types:
 | `STATUS` | From the orchestrator: give your state. As a reply: 1 line with what you do now and the next step |
 | `SYNC` | Copy `main` to the board |
 | `RETRO` | User wants a team change |
-| `RELOAD` | `docs/adlc.md` changed. Read it again |
+| `RELOAD` | `docs/adlc.md` or a role file changed. Read them again |
 
 ## 6. Retro fast path
 
 1. Make a worktree from `origin/main`.
-2. Change `docs/adlc.md` only.
-3. Open a PR. Send `REVIEW` to the orchestrator. A reviewer checks it as a document PR (section 3, reviewer). After the approval, merge it with squash (rule 12).
+2. Change only `docs/adlc.md` and the files in `docs/adlc/roles/`.
+3. Open a PR. Send `REVIEW` to the orchestrator. A reviewer checks it as a document PR (role file of the reviewer). After the approval, merge it with squash (rule 12).
 4. Remove the worktree and the branch.
 5. Send `DONE` to the orchestrator. The orchestrator sends `RELOAD` to all sessions.
 
@@ -340,19 +233,14 @@ Rules:
 
 ## 8. Start commands
 
-The orchestrator starts each session in 2 steps.
+The `sofa` skill starts the orchestrator. The orchestrator starts each other session. Start each session from the main folder:
 
-1. Start the session from the main folder. The first prompt is only the `/color` command:
+```
+cd <main folder> && claude --bg -n <prefix>-<role>[-n] --model <model> [--effort <effort>] --permission-mode bypassPermissions "<start prompt>"
+```
 
-   ```
-   cd <main folder> && claude --bg -n <prefix>-<role>[-n] --model <model> [--effort <effort>] --permission-mode bypassPermissions "/color <colour>"
-   ```
-
-2. Wait until `ListAgents` shows `<prefix>-<role>[-n]`. Then send the start prompt to it with `SendMessage`.
-
-Do not put the start prompt in the `claude --bg` command. A `/color` command must be the full first prompt. `SendMessage` cannot run `/color`: the session gets the text and does not run it.
-
-Use the Colour, Model and Effort columns in section 3 for `<colour>`, `--model` and `--effort` (for example, a reviewer uses `"/color green"`, `--model claude-opus-5-5 --effort high`).
+Use the Model and Effort columns in section 3 for `--model` and `--effort` (for example, a reviewer uses `--model claude-opus-5-5 --effort high`).
+Use the exact name `<prefix>-<role>[-n]`: the mod of the `sofa` skill finds the colour of the session from this name. The start prompt does not set the colour.
 A live session does not change its colour, model or effort after `RELOAD`. If section 3 changes the colour, the model, the effort or the name of a role, restart each session of that role when it has no work.
 If a role gets a new name and a new role gets the old name, the orchestrator stops each live session of the old name before it sends `RELOAD`. Then it starts the session again with the new name. Else, after the `RELOAD`, the session reads the new role that has the old name.
 
@@ -360,12 +248,16 @@ Start prompt:
 
 ```
 You are the <role> of the <prefix> team. Read docs/adlc.md on main.
+Then read your role files (section 3, "Role files"): <skill folder>/references/roles/<role>.md,
+and docs/adlc/roles/<role>.md if it exists. Where they differ, the repository file wins.
 Do the role "<role>" as written there. The orchestrator is <orchestrator name>.
 Send a DONE message to the orchestrator when you are ready. Then wait for TASK messages.
 ```
+
+The orchestrator start prompt is in the `sofa` skill.
 
 ## 9. Change log
 
 | Date | Change | Why |
 |---|---|---|
-| `<date>` | Created from the sofa template version 2 | Team setup for `<repo>` |
+| `<date>` | Created from the sofa template version 3 | Team setup for `<repo>` |
