@@ -4,10 +4,10 @@ Section numbers are the sections of `docs/adlc.md`.
 
 ## At start
 
-The `sofa` skill starts this session. Its start prompt gives the launcher name.
+The `sofa` skill starts this session. Its start prompt gives the launcher name and the machine values (main folder, skill folder, GitHub account).
 
 1. Check the board tool access. If a user step is necessary (for example a token scope), start chores first.
-2. For each other role in section 3, start 1 session with the command in section 8.
+2. For each other role in section 3, start 1 session with the command in section 8. Copy the machine values of your start prompt into each start prompt.
 3. Wait for a `DONE` message from each session. Use `ListAgents` to see which sessions are live.
 4. Start the status check: `/loop 10m` (see "Status check" below).
 5. Send a `DONE` message to the launcher with the names of the live sessions.
@@ -17,6 +17,11 @@ Messages arrive by themselves. Do not poll `ListAgents` in a loop.
 ## Work
 
 - Keep a queue of features in roadmap order.
+- Claim a feature before you assign it to a specifier. Teams on other machines can work on the same repository, so the claim tells them that this team does the feature.
+  - Claim: set the GitHub account of the machine values as the assignee of the feature item on the board (the same field in Linear or Jira).
+  - Skip a feature that has a different assignee. Do not remove the assignee of another account. If all ready features have a different assignee, send an `ASK` to hitl with the priority `blocks code now`, and wait.
+  - The claim stays until the feature is done. If this team stops a feature before it is done, remove the claim.
+  - If the board tool is `none`, there is no claim. Then only 1 machine runs the team for the repository.
 - As soon as a story gets the state `ready` on `main`, assign its spec to a free implementer at once. If no implementer is free, start a new implementer (the maximum is 4). Do not wait for other stories or features.
 - Start a feature only when the features it depends on are merged, unless a user `ANSWER` allows an early start (rule 11).
 - Run 2 features at the same time only if they do not change the same area.

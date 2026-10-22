@@ -1,6 +1,6 @@
 # ADLC — Agent Development Life Cycle
 
-<!-- sofa-template-version: 3 -->
+<!-- sofa-template-version: 4 -->
 
 This file defines the agent team for this repository.
 The `sofa` skill reads this file to start the team.
@@ -9,17 +9,14 @@ The retro session is the only owner of this file and of `docs/adlc/roles/`.
 
 ## 1. Setup values
 
-The `sofa` skill fills these values when it copies the template.
+The `sofa` skill fills these values when it copies the template. They are the same on each machine that starts the team.
 
 | Key | Value |
 |---|---|
 | Repository | `<owner>/<repo>` |
-| Main folder | `<absolute path of the main checkout>` |
 | Board tool | `<GitHub Projects \| Linear \| Jira \| none>` |
-| GitHub account | `<gh account>` |
 | Team prefix | `<prefix>` (session names are `<prefix>-<role>[-n]`) |
 | Orchestrator name | `<prefix>-orchestrator` |
-| Skill folder | `<absolute path of the installed sofa skill, for example /home/<user>/.claude/skills/sofa>` |
 | Product docs | `docs/product/prd`, `docs/product/roadmap` |
 | System design | `docs/product/system-design.md`, or `none` |
 | ADR folder | `docs/adr`. The list of ADRs and their status is in `docs/adr/README.md` |
@@ -27,7 +24,11 @@ The `sofa` skill fills these values when it copies the template.
 | Build | `<the command that builds, checks and tests the product before a PR, and the services it needs>` |
 | Run | `<how a verifier runs the product as a user: a terminal for a CLI, a browser (Playwright) for a web app>` |
 | Reference program | `<a program whose behavior is a source for inferred rows, with its pinned version, or none>` |
-| Commit identity | `<the author and committer that each merge commit on main must have, or none>` |
+
+Machine values are not in this file, because they are different on each machine. The `sofa` skill finds them when it starts the team, and each start prompt gives them (section 8):
+- Main folder: the absolute path of the main checkout on this machine.
+- Skill folder: the absolute path of the installed `sofa` skill on this machine.
+- GitHub account: the active `gh` account on this machine. Sessions commit, push and open PRs as this account.
 
 Repository rules:
 - `<rules for this repository only: secrets folders, data that must not leave the repo, who approves destructive actions, which source wins when sources differ>`
@@ -53,7 +54,7 @@ Repository rules:
     If one of these is false, the story stays in `backlog`. A role that changes the state of a story or a feature checks this rule in the same PR.
     Exception: a user `ANSWER` can set the stories of a blocked feature to `ready` (for example, "start now"). The `blocked_by` list stays. The `Plan` line in `log.md` names the `ANSWER`.
     When a feature gets the state `done`, the same PR sets to `ready` each story that waited only for this feature and has a merged spec.
-12. Merge PRs with squash only. A rebase merge can write the account address as the committer. If section 1 has a "Commit identity" value, the session that merges checks the new commit on `main` after each merge: compare the `sha256sum` of its author address and of its committer with the values of that row. The check never prints an address.
+12. Merge PRs with squash only.
 13. Turn exit rule. Each role except the orchestrator, hitl and retro ends each turn with 1 message to the orchestrator: `DONE`, `REVIEW`, `ASK`, `TASK`, `BLOCKED` or `STATUS`. If the role already sent this message for the same item and nothing changed, it does not send it again.
     - A "needs input:" line, a question in the session, or a status line in the job list does not tell the orchestrator. Send the message.
     - Never wait for the user, because the user does not see your session. Of the roles of this rule, only chores waits for the user, and only while it guides the user through a step.
@@ -89,7 +90,7 @@ Colour: the session colour that the built-in `/color` sets. It shows in the prom
 
 The work of each role is in its role files. A session reads them after this file:
 
-1. The skill role file: `<skill folder>/references/roles/<role>.md` (the skill folder is in section 1).
+1. The skill role file: `<skill folder>/references/roles/<role>.md` (the skill folder is in your start prompt).
 2. The repository role file: `docs/adlc/roles/<role>.md`, if it exists. The retro writes it.
 
 Where the two files differ, the repository role file wins. A role that is only in this repository has only a repository role file.
@@ -98,7 +99,7 @@ Where the two files differ, the repository role file wins. A role that is only i
 
 ```
 roadmap (main)
-  → orchestrator picks next ready feature
+  → orchestrator picks next ready feature that no other machine claimed, and claims it on the board
   → specifier: spec PR → merge
   → stories get the state ready (rule 11)
   → orchestrator at once assigns the spec to a free implementer (or starts one)
@@ -233,7 +234,7 @@ Rules:
 
 ## 8. Start commands
 
-The `sofa` skill starts the orchestrator. The orchestrator starts each other session. Start each session from the main folder:
+The `sofa` skill starts the orchestrator. The orchestrator starts each other session. Start each session from the main folder of this machine (machine values, section 1):
 
 ```
 cd <main folder> && claude --bg -n <prefix>-<role>[-n] --model <model> [--effort <effort>] --permission-mode bypassPermissions "<start prompt>"
@@ -251,13 +252,14 @@ You are the <role> of the <prefix> team. Read docs/adlc.md on main.
 Then read your role files (section 3, "Role files"): <skill folder>/references/roles/<role>.md,
 and docs/adlc/roles/<role>.md if it exists. Where they differ, the repository file wins.
 Do the role "<role>" as written there. The orchestrator is <orchestrator name>.
+Machine values: main folder <main folder>, skill folder <skill folder>, GitHub account <gh account>.
 Send a DONE message to the orchestrator when you are ready. Then wait for TASK messages.
 ```
 
-The orchestrator start prompt is in the `sofa` skill.
+The orchestrator start prompt is in the `sofa` skill. It gives the machine values, and the orchestrator copies them into each start prompt.
 
 ## 9. Change log
 
 | Date | Change | Why |
 |---|---|---|
-| `<date>` | Created from the sofa template version 3 | Team setup for `<repo>` |
+| `<date>` | Created from the sofa template version 4 | Team setup for `<repo>` |
