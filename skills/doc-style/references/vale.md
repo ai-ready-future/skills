@@ -6,17 +6,29 @@ Vale finds errors that a pattern can match: headings that are not in sentence ca
 
 ## Check that Vale is installed
 
+Run the script in this skill. It reads the operating system, the Linux distribution, and the package managers on `PATH`. It prints one install command and the reason for it. It installs nothing.
+
 ```bash
-command -v vale
+bash <skill-dir>/scripts/vale-install-command.sh
 ```
 
-If the command prints nothing, Vale is not installed. Tell the user, and give them one install command. Do not install it yourself.
+When line 1 is `vale --version`, Vale is installed. Otherwise, give the user the command from line 1 and the reason from line 2. Do not run the command yourself, because it can need `sudo` or a password.
 
-| Platform | Command |
+When the shell cannot run bash, such as PowerShell on Windows, pick the first row that matches:
+
+| System | Command |
 | --- | --- |
-| macOS or Linux with Homebrew | `brew install vale` |
-| Windows | `choco install vale` |
-| Other | download a binary from https://github.com/vale-cli/vale/releases |
+| Windows with winget | `winget install -e --id errata-ai.Vale` |
+| Windows with Chocolatey | `choco install vale` |
+| macOS with Homebrew | `brew install vale` |
+| Arch Linux | `sudo pacman -S vale` |
+| Linux with Homebrew | `brew install vale` |
+| Linux with snap | `sudo snap install vale` |
+| Debian or Ubuntu, after you add the pkg.haus APT archive | `sudo apt install vale` |
+| Docker | `docker pull jdkato/vale` |
+| Other | download an archive from https://github.com/vale-cli/vale/releases |
+
+Source: https://docs.vale.sh/topics/installation
 
 ## Configure a repository
 
