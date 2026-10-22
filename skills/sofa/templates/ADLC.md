@@ -348,7 +348,7 @@ The orchestrator starts each session in 2 steps.
    cd <main folder> && claude --bg -n <prefix>-<role>[-n] --model <model> [--effort <effort>] --permission-mode bypassPermissions "/color <colour>"
    ```
 
-2. Send the start prompt to `<prefix>-<role>[-n]` with `SendMessage`.
+2. Wait until `ListAgents` shows `<prefix>-<role>[-n]`. Then send the start prompt to it with `SendMessage`.
 
 Do not put the start prompt in the `claude --bg` command. A `/color` command must be the full first prompt. `SendMessage` cannot run `/color`: the session gets the text and does not run it.
 
