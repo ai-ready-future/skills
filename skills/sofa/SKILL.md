@@ -60,6 +60,11 @@ The session colours need the mod. Claude Code loads it by itself when this skill
    - Commit identity check (rule 12), or none.
 2. Copy `templates/ADLC.md` to `docs/adlc.md`. Fill every row of section 1 and the repository rules with the answers and the facts of step 1. The orchestrator name is `<prefix>-orchestrator`, not the launcher name. No `<...>` placeholder must stay. Apply the changes to the roles table. Write a change to the work of a role in `docs/adlc/roles/<role>.md` (see the retro role file, "Where a change goes"). Fill the first line of section 9.
 3. Land `docs/adlc.md` and `docs/adlc/roles/` on `main` with a worktree, a PR and a squash merge.
+4. Tell the user the best way to work with the team: start Claude Code in the main folder with this command. It shows only the sessions of this repository, and the user can open each one from there.
+
+   ```
+   $ claude agents --cwd $(pwd)
+   ```
 
 ## Step 2b — Upgrade an older `docs/adlc.md`
 
@@ -85,4 +90,4 @@ The session colours need the mod. Claude Code loads it by itself when this skill
    ```
 
 4. Wait for the `DONE` message from the orchestrator.
-5. Tell the user how to open the orchestrator, hitl and retro: `claude agents`, then `claude attach <name>`. Then this session has no more work.
+5. Tell the user how to work with the team: run `claude agents --cwd <main folder>` (in the main folder: `claude agents --cwd $(pwd)`). It shows only the sessions of this repository, in their role colours. Open the orchestrator, hitl or retro from there, or with `claude attach <name>`. Then this session has no more work.
