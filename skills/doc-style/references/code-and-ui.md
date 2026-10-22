@@ -27,7 +27,7 @@ Paraphrased from the Google developer documentation style guide (https://develop
 
 | Rule | Do | Not |
 | --- | --- | --- |
-| In Markdown, put a code block in a code fence. | `` ``` `` fence | text with no fence |
+| In Markdown, put a code block in a code fence, or indent each line by four spaces. | `` ``` `` fence | code in a normal paragraph |
 | Indent with spaces, usually two for each level, as the language style guide tells you. | two spaces | tab characters |
 | Mark omitted code with a comment, not dots, and do not make that block click-to-copy. | `# Other settings omitted.` | `...` or `…` |
 | Put a sentence before each code sample to introduce it. | The following sample creates a queue: | — |
@@ -132,7 +132,7 @@ Paraphrased from the Google developer documentation style guide (https://develop
 
 | Rule | Do | Not |
 | --- | --- | --- |
-| When a sentence ends with an example, put "such as", an em dash, or parentheses before it, because a semicolon there is wrong. | Add a label—for example, `env:test`. | Add a label; for example, `env:test`. |
+| When a sentence ends with an example, put "such as" or an em dash before it. | Add a label—for example, `env:test`. | Add a label; for example, `env:test`. Add a label (for example, `env:test`). |
 | Keep a mid-sentence example short, and set it off with parentheses, commas, or dashes. | Enter a port (for example, `8080`), and then click **Save**. | Enter a port (for example, if you use TLS, enter `8443`), and then click **Save**. |
 | Put a long example in a separate sentence that starts with "For example". | You can group VMs with tags. For example, tag each VM with `tier:web` or `tier:db`. | — |
 

@@ -101,7 +101,7 @@ Paraphrased from the Google developer documentation style guide word list (https
 | ingest | import, load, copy | Use "ingest" only with significant processing. |
 | interface (verb) | interact, communicate | — |
 | Internet | internet | Lowercase. |
-| just | avoid; delete it | If needed, use "only". Prefer "just" to "simply". |
+| just | avoid; delete it | If the meaning needs it, use a more exact word: only, instead, or previously. |
 | k8s | Kubernetes | — |
 | key (adjective) | important, crucial | For the noun, name the type of key. |
 | key/value pair | key-value pair | — |

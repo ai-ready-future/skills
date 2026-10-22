@@ -6,7 +6,7 @@ Paraphrased from the Google developer documentation style guide (https://develop
 
 | Rule | Do | Not |
 | --- | --- | --- |
-| Write "and" in text, headings, and navigation, because some screen readers skip `&`. | Install and configure | Install & configure |
+| Write "and" in text, headings, and navigation. Keep `&` only when a UI label has it. | Install and configure | Install & configure |
 | Keep `&` only for UI labels that show it, tight table headings, diagram labels, and code. | — | — |
 | Use "preceding", "earlier", or "following" for positions, because a listener has no "above". | the preceding table | the table above |
 | Name a control by its label, not by its shape or place. | Click **Settings**. | Click the gear icon on the right. |
@@ -20,13 +20,13 @@ Paraphrased from the Google developer documentation style guide (https://develop
 | Go down one heading level at a time, and style headings with CSS, not with a wrong level. | h2, then h3 | h2, then h4 |
 | Use one level-1 heading for the page title, and no empty headings. | — | — |
 | Introduce a table in the text before it, because some screen readers do not announce tables. | The following table lists the regions: | — |
-| Mark heading cells with `th`, and add `scope` or `headers` when rows and columns both have headings. | — | — |
+| Mark heading cells with `th`. Add `scope` when rows and columns both have headings. Add `headers`, with unique IDs, when more than one row has column headings. | — | — |
 | Keep table cells unmerged, because `colspan` and `rowspan` confuse screen readers. | — | — |
 | Introduce an expandable element in the text before it. | To see the limits, expand **Limits**. | — |
 | Let text wrap freely, because hard line breaks fail in narrow windows and with large text. | — | — |
 | Avoid all caps and camel case in prose, because some screen readers spell them letter by letter. | Save the file | SAVE THE FILE |
-| Avoid exclamation marks, question marks, and semicolons, because some screen readers skip them. | — | — |
-| Add an `aria-label` to `>` in menu paths so that screen readers say "and then". | **File** > **Save** | — |
+| Avoid exclamation marks, question marks, and semicolons when you can, because some screen readers skip them. | — | — |
+| Put the full menu path in one bold span, and add an `aria-label` to `>` so that screen readers say "and then". | `**File <span aria-label="and then">></span> Save**` | **File** > **Save** |
 | Keep text contrast at 4.5:1 or more in custom styles. | — | — |
 | Show content with standard styles, because `visibility:hidden` and `display:none` hide it from screen readers. | — | — |
 | Give each form field a `label` element outside the field. | — | placeholder text as the only label |
@@ -99,7 +99,7 @@ Paraphrased from the Google developer documentation style guide (https://develop
 | --- | --- |
 | Domains | `example.com`, `example.org`, `example.net` (reserved for examples). See the source page for more fictional domains. |
 | Email | a listed name at a listed domain, such as `kai@example.com`; role addresses such as `support@example.net` are OK |
-| Given names | Short names that differ by culture and do not show a gender, such as Kai, Dana, or Noam. See the source page for the full list. |
+| Given names | Names from the source list, such as Kai, Dana, or Noam. Check that a name does not suggest a gender that you do not intend. |
 | Surnames | an initial after the given name: Hao L., Nur B. |
 | Company | Example Organization; add a word to tell two apart: Startup Example Organization |
 | Phone | 800-555-0100 to 800-555-0199 |

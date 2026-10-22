@@ -11,7 +11,7 @@ Paraphrased from the Google developer documentation style guide (https://develop
 
 | File | Load when the text has |
 | --- | --- |
-| `references/voice-and-tone.md` | any prose: person, tense, claims, "must" and "should", pronouns |
+| `references/voice-and-tone.md` | prose longer than a short chat reply: person, tense, claims, "must" and "should", pronouns |
 | `references/structure.md` | headings, lists, tables, steps, notes and warnings, links, images |
 | `references/code-and-ui.md` | code, commands, file names, placeholders, UI names, API reference comments |
 | `references/punctuation.md` | a question about a comma, dash, colon, quotation mark, capital letter, or abbreviation |
@@ -27,7 +27,7 @@ Paraphrased from the Google developer documentation style guide (https://develop
 3. Address the reader as "you", and use active voice and present tense.
 4. Put the goal or the condition first in a sentence, then the instruction: "To delete the file, click **Delete**."
 5. Use "must" for a required action, "can" for an optional action, and "might" for a possible result.
-6. Leave out "please", "simply", "just", "easy", "currently", and "new", because these words add no facts and can make the text wrong later.
+6. Leave out "please", "simply", "just", and "easy", because these words add no facts. Leave out "new", "now", and "currently" when they describe a feature, because the text becomes wrong after the next release.
 7. Use sentence case in every title and heading.
 8. Use a numbered list for steps in sequence, and a bulleted list for other lists of three or more items.
 9. Put code, commands, file names, and values in code font, and put UI element names in bold.

@@ -35,7 +35,7 @@ Paraphrased from the Google developer documentation style guide (https://develop
 | End each item with a period. Omit it when the item is one word, has no verb, is all code, or is all link text. | - Copy the file. / - Port number | - Port number. |
 | If the end punctuation becomes mixed, rewrite the items in parallel form or put a period on all items. | — | — |
 | Add an explanation to all items or to none. Use a description list for explanations. | — | Only one item has an explanation |
-| End a run-in heading with a colon or a period, and use the same mark in the full list. | - **Port:** the port that the server uses | — |
+| End a run-in heading with a colon or a period, and use the same mark in the full list. | - **Port:** the port that the server uses. | — |
 | After a colon, start the description in lowercase. After a period, start it with a capital letter. | - **Port:** the listening port / - **Port.** The listening port. | - **Port:** The listening port |
 | After a colon, omit the end period for a phrase without a verb. Add a period when the description has a verb. | - **Logs:** errors, warnings | — |
 | Separate a run-in heading from its description with a colon, not a dash. | - **Port:** the listening port | - **Port** — the listening port |

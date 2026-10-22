@@ -38,7 +38,7 @@ Paraphrased from the Google developer documentation style guide (https://develop
 | Leave a compound open after a verb, unless the word list always hyphenates it. | The page is well organized. | The page is well-organized. |
 | Leave an *-ly* adverb open before a noun. | a newly created disk | a newly-created disk |
 | Move words after the noun when a modifier has more than two words. | tests that run only on ARM | ARM-only-run tests |
-| Put a hyphen between a number and a unit written as a word when they come before a noun. | a 32-bit key, a ten-second delay | — |
+| Put a hyphen between a number and a unit written as a word when they come before a noun. | a 32-bit key, a 10-second delay | — |
 | Put a nonbreaking space between a number and a unit abbreviation, not a hyphen. | `500&nbsp;MB` disk | 500-MB disk |
 | Use a suspended hyphen to share one base, with a space after the hyphen only. | two- or four-core machines | two - or four-core machines |
 
