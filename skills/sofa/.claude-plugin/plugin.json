@@ -1,0 +1,5 @@
+{
+  "name": "sofa",
+  "version": "0.1.0",
+  "description": "Gives each sofa team session the colour of its role, from the roles table in docs/adlc.md."
+}
