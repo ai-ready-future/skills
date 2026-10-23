@@ -1,6 +1,6 @@
 ---
 name: sofa
-description: 'Start a software factory: a team of Claude Code background sessions (orchestrator, hitl, retro, planner, projecter, architect, specifier, implementers, reviewers, verifiers, tester, chores) that build a product from the PRD and roadmap in a repo. Use when the user says "sofa", "start the team", "spawn the team" or "software factory".'
+description: 'Start a software factory: a team of Claude Code background sessions (orchestrator, hitl, retro, planner, tracker, architect, specifier, implementers, reviewers, verifiers, tester, chores) that build a product from the PRD and roadmap in a repo. Use when the user says "sofa", "start the team", "spawn the team" or "software factory".'
 disable-model-invocation: true
 ---
 
@@ -68,6 +68,7 @@ The session colours need the mod. Claude Code loads it by itself when this skill
 2. Make a new `docs/adlc.md` from `templates/ADLC.md`. Keep the section 1 values, the repository rules, the values of the roles table and the rows of section 9 of the old file. Set the orchestrator name as in step 1.9. If the old roles table has no Colour column, use the colours of the template.
    - Remove the rows that hold machine values: Main folder, GitHub account, Skill folder and Commit identity.
    - Remove each repository rule that holds a machine value, for example a commit address of 1 account. Tell the user which rules you remove.
+   - Rename the role `projecter` to `tracker`: its row in the roles table, and `docs/adlc/roles/projecter.md` to `docs/adlc/roles/tracker.md` if it exists.
 3. If the old file has role details (version 2 or lower), compare the role details of each role with the skill role file. Write each difference in `docs/adlc/roles/<role>.md`. Keep the changes to the shared sections (rules, flow, messages, card) in the new `docs/adlc.md`.
 4. Add a line to section 9: the upgrade to version 4.
 5. Land the files on `main` with a worktree, a PR and a squash merge.

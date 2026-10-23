@@ -17,10 +17,10 @@ Messages arrive by themselves. Do not poll `ListAgents` in a loop.
 ## Work
 
 - Keep a queue of features in roadmap order.
-- Make sure that a feature is claimed by this team on the board before you assign it to a specifier. Teams on other machines can work on the same repository, and the claim tells them that this team does the feature (see the projecter).
-  - Send a `TASK` to the projecter to claim the next ready feature. Assign the feature only after the projecter sends `DONE` for the claim.
-  - If the projecter reports that another team has the feature, take the next ready feature. If all ready features belong to other teams, send an `ASK` to hitl with the priority `blocks code now`, and wait.
-  - If this team stops a feature before it is done, send a `TASK` to the projecter to release the claim.
+- Make sure that a feature is claimed by this team on the board before you assign it to a specifier. Teams on other machines can work on the same repository, and the claim tells them that this team does the feature (see the tracker).
+  - Send a `TASK` to the tracker to claim the next ready feature. Assign the feature only after the tracker sends `DONE` for the claim.
+  - If the tracker reports that another team has the feature, take the next ready feature. If all ready features belong to other teams, send an `ASK` to hitl with the priority `blocks code now`, and wait.
+  - If this team stops a feature before it is done, send a `TASK` to the tracker to release the claim.
   - If the board tool is `none`, there is no claim. Then only 1 machine runs the team for the repository.
 - As soon as a story gets the state `ready` on `main`, assign its spec to a free implementer at once. If no implementer is free, start a new implementer (the maximum is 4). Do not wait for other stories or features.
 - Start a feature only when the features it depends on are merged, unless a user `ANSWER` allows an early start (rule 11).
@@ -33,7 +33,7 @@ Messages arrive by themselves. Do not poll `ListAgents` in a loop.
 - An `ASK` with a `revisit:` line goes to the owner of the page: the planner for a PRD decision, the architect for an ADR. An `ASK` with the line `owner: planner` goes to hitl in the batch of its feature. Send the `ANSWER` of a rule card or of an `owner: planner` card to the specifier and the planner. If the chosen option names a change to an accepted ADR, also send it to the architect. The architect changes that ADR in an ADR PR that names the `ANSWER`.
 - Stop extra sessions when they have no work.
 - After a retro merge, tell every live session to read `docs/adlc.md` and its role files again.
-- After a PR that changes `docs/product` merges, send a `SYNC` to the projecter.
+- After a PR that changes `docs/product` merges, send a `SYNC` to the tracker.
 - Keep a short status table in the orchestrator session. Do not write it to the repo.
 - If the orchestrator session name changes, the retro updates section 1 and the orchestrator sends `RELOAD`.
 - Send each `BLOCKED` (rule 14) on, by its tag:
