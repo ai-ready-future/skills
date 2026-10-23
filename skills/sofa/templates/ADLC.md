@@ -37,12 +37,12 @@ Repository rules:
 ## 2. Rules for all sessions
 
 1. Files on `main` are the source of truth. The board is only a copy of `main`, plus the claims of the tracker (which team does which feature).
-2. Do not change `main` directly. Use a worktree, a branch and a pull request. Only the retro has a fast path (see section 6).
-3. Send all messages to the orchestrator with `SendMessage`. Do not send messages to other roles directly.
-4. Do not ask the user questions. Send the question to the orchestrator. The hitl session asks the user. Exceptions: hitl, retro, and chores (only to guide the user through a manual step).
+2. Change `main` only with a worktree, a branch and a pull request, so that each change gets a review. Only the retro has a fast path (see section 6).
+3. Send all messages to the orchestrator with `SendMessage`, because the orchestrator routes them and keeps the status of each item.
+4. Send each question for the user to the orchestrator, so that the user gets all questions from the hitl session, in priority order. Exceptions: hitl, retro, and chores (only to guide the user through a manual step).
 5. Use the message format in section 5.
 6. When the orchestrator tells you that `docs/adlc.md` or a role file changed, read `docs/adlc.md` and your role files again, and rebase your worktree on `main`.
-7. Never read, print or commit secrets or key files.
+7. Never read, print or commit secrets or key files, because session transcripts, PRs and issues are not private.
 8. Write all documents in ASD-STE100 Simplified Technical English.
 9. When you finish a task, send a `DONE` message. Then wait for the next message.
 10. Before you start, fetch documentation for libraries with context7 (`ctx7` CLI).
@@ -194,7 +194,7 @@ Types:
 Always use this layout, in this order:
 
 1. The header: `from <role> → "<title>"`. The title tells the topic of the question in a few plain words.
-2. The related line: `Related: <background in plain words>`. If there is no useful background, do not write this line.
+2. The related line: `Related: <background in plain words>`. Write it only when there is useful background.
 3. The question, in 1 sentence.
 4. The decides block, for a rule card only (section 4, "Ask the Rule"): the line `This answer decides:` and at most 5 lines below it. Each line names 1 detail, or 1 group of details, that the recommended option decides.
 5. The options list: 1 bullet for each option, with the pros and the cons indented below it.
@@ -224,8 +224,8 @@ What do we build now for the "(standard input)" label?
 Rules:
 - Plain words: Write the header, the related line, the question and the options in plain English (ASD-STE100 and the Google developer documentation style). Do not use IDs of features, stories, decisions, constraints or criteria, and do not use question IDs. Say what the item does in plain words.
 - Question IDs: Hitl keeps the question ID for itself. It uses the ID in the `ANSWER` message to the orchestrator, but not in the card.
-- Options: Do not number the options. Start each option with a short bold name and a colon, then the description. Do not use tables, because tables do not show correctly on a mobile screen.
-- Recommended option: Put the text `[recommended]` at the end of the option. Do not write a separate recommendation line.
+- Options: Start each option with a short bold name and a colon, then the description, with no number in front. Do not use tables, because tables do not show correctly on a mobile screen.
+- Recommended option: Put the text `[recommended]` at the end of the option. This is the only place of the recommendation.
 - Decides block: Write the lines in plain words, with no IDs. The user can veto 1 line with the answer `other: but <line>`.
 - Pros and cons: Write `**Pros:** ✅` and `**Cons:** ❌`. Give each option 1 or more pros and 1 or more cons. Put each pro and each con on its own indented bullet. Keep each bullet to a short phrase.
 - Emojis: Use only ✅ and ❌, and only on the Pros and Cons lines.

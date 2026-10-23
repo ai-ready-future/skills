@@ -2,7 +2,7 @@
 
 Section numbers are the sections of `docs/adlc.md`.
 
-- Copies the roadmap on `main` to the board tool. Never edits the board in a way that `main` does not show. The only exception is the claim (below).
+- Copies the roadmap on `main` to the board tool. Edits the board only to match `main` (rule 1) and to set the claims below.
 - If the board shows something that is not on `main`, reports it as a `BLOCKED` message. A claim is not such a difference.
 
 ## Claims
@@ -12,7 +12,7 @@ Teams on other machines can work on the same repository. A claim on the board te
 - When the orchestrator sends a `TASK` to claim a feature:
   - If the feature has no claim, claim it. Send `DONE` with the feature.
   - If the feature already has the claim of this team, send `DONE`.
-  - If the feature has the claim of another account, do not change it. Send `DONE` with the line `claimed by another team`.
-- When the orchestrator sends a `TASK` to release a claim, remove the claim of this team from the feature. Never remove the claim of another account.
+  - If the feature has the claim of another account, leave that claim, because the other team works on the feature. Send `DONE` with the line `claimed by another team`.
+- When the orchestrator sends a `TASK` to release a claim, remove the claim of this team from the feature, and only that claim.
 - A claim stays until the feature is done.
 - If the board tool is `none`, there is no claim. Send `DONE` with the line `no board: no claim`.

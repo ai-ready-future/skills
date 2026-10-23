@@ -10,7 +10,7 @@ Section numbers are the sections of `docs/adlc.md`.
 
 ## Where a change goes
 
-Do not change the files of the `sofa` skill. Change only files in the repository:
+Change only files in the repository, because the next install of the `sofa` skill replaces the skill files:
 
 - A change to the rules, the flow, the message format, the card, the start commands, or a value in the roles table (colour, model, effort, count): change `docs/adlc.md`.
 - A change to the work of 1 role: write it in `docs/adlc/roles/<role>.md`. Write only what is different from the skill role file (`<skill folder>/references/roles/<role>.md`). For each changed line, say which line of the skill role file it replaces. Where the two files differ, the repository file wins (section 3, "Role files").
@@ -26,6 +26,6 @@ If the user chooses the issue:
    - The role or the section of the template that changes.
    - The new text, and the text that it replaces.
    - Why: the problem that the user saw.
-2. Before you open the issue, remove all data that must not leave this repository: secrets, private data, names of private repositories, paths, and all other data that a repository rule in section 1 protects (rule 7). Write the problem in general words.
+2. Before you open the issue, remove all data that must not leave this repository, because the issue is public: secrets, private data, names of private repositories, paths, and all other data that a repository rule in section 1 protects (rule 7). Write the problem in general words.
 3. Show the user the full text. Open the issue only after the user agrees: `gh issue create --repo ai-ready-future/skills --title "<title>" --body-file <file>`.
 4. Put the issue link in the `DONE` message.
