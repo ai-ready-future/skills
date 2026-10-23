@@ -6,19 +6,17 @@ disable-model-invocation: true
 
 # sofa — software factory
 
-This skill is only the entry point. The team is defined in `ADLC.md` and in the role files.
-This session is the launcher. It does the checks and the setup, and starts the orchestrator as a background session. The orchestrator starts all the other roles. This session does not become the orchestrator.
+This session is the launcher. It checks the repository, makes sure that `docs/adlc.md` meets the current template, and starts the orchestrator as a background session. The orchestrator starts all the other roles. The orchestrator is a separate session because it runs with the model and the effort of its row in the roles table.
 
 ## Files
 
-- `templates/ADLC.md` — the template team definition (version 4): setup values, rules, roles table, flow, messages and start commands. Do not change it here for one repository.
-- `references/roles/<role>.md` — the work of each role. Sessions read these files from the installed skill. Do not copy them to the repository.
+- `templates/ADLC.md` — the current team definition: setup values, rules, roles table, flow, messages and start commands. Each repository has its own copy in `docs/adlc.md`.
+- `references/roles/<role>.md` — the work of each role. Sessions read these files from the installed skill, so a fix here reaches each repository.
 - `hooks/register.tsx` — the mod. When a session starts with the name `<prefix>-<role>[-n]` in a folder with `docs/adlc.md`, it sets the session colour of that role from the roles table. `tests/` has its tests.
-- `templates/ADLC.v1.md` — the old version 1. Only for reference.
-- `<repo>/docs/adlc.md` — the team definition for one repository. This copy is the source of truth after setup. The retro session changes it.
+- `<repo>/docs/adlc.md` — the team definition for one repository, and the source of truth after setup. The retro session changes it.
 - `<repo>/docs/adlc/roles/<role>.md` — changes to 1 role for one repository. Where it differs from the skill role file, it wins. The retro session writes it.
 
-The retro session offers to open an issue in `ai-ready-future/skills` for a change that all repositories need. Do not change the skill files yourself.
+A change that all repositories need goes to `ai-ready-future/skills` as an issue, which the retro offers. Leave the installed skill files as they are, because the next install replaces them.
 
 ## Requirements
 
@@ -30,55 +28,46 @@ Check these before step 2. If one is missing, tell the user the exact install st
 - Plugins: `prd`, `adr`, `relay`, `pr-flow`, `productivity`, `ui-judge` (marketplace `claude-code-dev-plugins`), and `superpowers` (marketplace `claude-plugins-official`).
 - Skill: `verify` (used by the verifier role). It comes with Claude Code as `/verify`.
 
-The session colours need the mod. Claude Code loads it by itself when this skill folder is in `~/.claude/skills/sofa` or in the `.claude/skills/sofa` folder of the project. Some Claude Code versions (for example 2.1.257) do not load mods. Then the team works, but with no role colours. Do not stop for this. Tell the user.
+The session colours need the mod. Claude Code loads it by itself when this skill folder is in `~/.claude/skills/sofa` or in the `.claude/skills/sofa` folder of the project. Some Claude Code builds (for example 2.1.257) do not load mods. Then tell the user that the team has no role colours, and continue, because the colours do not change the work.
 
 ## Step 1 — Check the repository
 
-1. Find the main folder: `git rev-parse --show-toplevel` in the main checkout (not in a worktree).
-2. Find your session name (the launcher name) with `ListAgents`. The first line shows it.
-3. Find the skill folder: the absolute path of the folder of this file.
-4. Run `gh auth status`. Record the active account and the token scopes. The active account is the GitHub account of this start.
-5. Find the PRD, the roadmap, the system design and the ADR folder. If no PRD or roadmap exists, stop and tell the user to make them first (prd plugin). If the ADR folder has no `README.md` index, record it: the architect makes the index first.
-6. Find the build, check and test command (for example in `package.json`, `Makefile`, `CLAUDE.md`), and how a user runs the product.
-7. Read the `CLAUDE.md` of the repository. If it names a different process or harness for product work, tell the user and ask which one wins before step 2.
-8. If `docs/adlc.md` does not exist, go to step 2.
-9. If `docs/adlc.md` exists, read its version (`sofa-template-version`). If the version is lower than 4, or if the orchestrator name is not `<prefix>-orchestrator`, go to step 2b. Else go to step 3. Do not ask the setup questions again.
+Find the machine values of this start. Each machine has different values, so they go only in the start prompts, never in `docs/adlc.md`:
 
-   The machine values (main folder, skill folder, GitHub account) are not in `docs/adlc.md`. The values of steps 1.1, 1.3 and 1.4 are the machine values of this start. A different machine never causes a change of `docs/adlc.md`.
+- Main folder: `git rev-parse --show-toplevel` in the main checkout, not in a worktree.
+- Skill folder: the absolute path of the folder of this file.
+- GitHub account: the active account of `gh auth status`. Also record the token scopes.
+- Launcher name: your session name, on the first line of `ListAgents`.
 
-## Step 2 — Setup (first run only)
+Then find the PRD, the roadmap, the system design and the ADR folder, the build, check and test command (for example in `package.json`, `Makefile`, `CLAUDE.md`), and how a user runs the product. If no PRD or roadmap exists, stop and tell the user to make them first with the prd plugin, because the team builds from them. If the ADR folder has no `README.md` index, record it: the architect makes the index first.
 
-1. Ask the user these questions with `AskUserQuestion`. Do not ask a question that the user already answered in the request.
-   - Board tool (GitHub Projects, Linear, Jira, none).
-   - Team prefix for session names.
-   - Changes to the roles, models, efforts, colours or counts in the template.
-   - Extra context files that every session must read.
-   - Repository rules (secrets, private data, who approves destructive actions).
-2. Copy `templates/ADLC.md` to `docs/adlc.md`. Fill every row of section 1 and the repository rules with the answers and the facts of step 1. Do not write a machine value (a path of this machine, the GitHub account, a commit address) in the file. The orchestrator name is `<prefix>-orchestrator`, not the launcher name. No `<...>` placeholder must stay. Apply the changes to the roles table. Write a change to the work of a role in `docs/adlc/roles/<role>.md` (see the retro role file, "Where a change goes"). Fill the first line of section 9.
-3. Land `docs/adlc.md` and `docs/adlc/roles/` on `main` with a worktree, a PR and a squash merge.
-4. Tell the user the best way to work with the team: start Claude Code in the main folder with this command. It shows only the sessions of this repository, and the user can open each one from there.
+If the `CLAUDE.md` of the repository names a different process or harness for product work, ask the user which one wins before step 2.
 
-   ```
-   $ claude agents --cwd $(pwd)
-   ```
+## Step 2 — Make `docs/adlc.md` meet the current template
 
-## Step 2b — Upgrade an older `docs/adlc.md`
+The result: `docs/adlc.md` and `docs/adlc/roles/` on `main` meet the current `templates/ADLC.md` and role files, and hold the values and the choices of this repository.
 
-1. Tell the user which values or which version is old, and what the upgrade changes. Continue only after the user agrees.
-2. Make a new `docs/adlc.md` from `templates/ADLC.md`. Keep the section 1 values, the repository rules, the values of the roles table and the rows of section 9 of the old file. Set the orchestrator name as in step 1.9. If the old roles table has no Colour column, use the colours of the template.
-   - Remove the rows that hold machine values: Main folder, GitHub account, Skill folder and Commit identity.
-   - Remove each repository rule that holds a machine value, for example a commit address of 1 account. Tell the user which rules you remove.
-   - Rename the role `projecter` to `tracker`: its row in the roles table, and `docs/adlc/roles/projecter.md` to `docs/adlc/roles/tracker.md` if it exists.
-3. If the old file has role details (version 2 or lower), compare the role details of each role with the skill role file. Write each difference in `docs/adlc/roles/<role>.md`. Keep the changes to the shared sections (rules, flow, messages, card) in the new `docs/adlc.md`.
-4. Add a line to section 9: the upgrade to version 4.
-5. Land the files on `main` with a worktree, a PR and a squash merge.
-6. If live sessions of the old team exist (`ListAgents`), stop them before step 3.
+If `docs/adlc.md` does not exist, ask the user these questions with `AskUserQuestion`. Skip a question that the request already answers.
+
+- Board tool (GitHub Projects, Linear, Jira, none).
+- Team prefix for session names.
+- Changes to the roles, models, efforts, colours or counts in the template.
+- Extra context files that every session must read.
+- Repository rules (secrets, private data, who approves destructive actions).
+
+Then copy `templates/ADLC.md` to `docs/adlc.md`. Fill section 1, the repository rules and the first row of section 9 from the answers and step 1, with no machine value and no `<...>` placeholder left. The orchestrator name is `<prefix>-orchestrator`, not the launcher name. Apply the role changes: a value goes in the roles table, and a change to the work of a role goes in `docs/adlc/roles/<role>.md` (see the retro role file, "Where a change goes").
+
+If `docs/adlc.md` exists and does not meet the current template (for example, its `sofa-template-version` is lower than the one of the template), migrate it and `docs/adlc/roles/` to the current definitions. The file already holds the answers of the setup questions, so do not ask them again. To find how an older file maps to the current template, start a subagent with the model `haiku` (Agent tool, `model: haiku`). It reads the git history of `skills/sofa` in `ai-ready-future/skills`: the commits and their PRs, from the version of this `docs/adlc.md` to now. It returns each change to the template and the role files, and what each change means for an older `docs/adlc.md`. Before you land the migration, tell the user what it changes, and continue only after the user agrees, because each machine that runs the team shares this file.
+
+Land the files on `main` with a worktree, a PR and a squash merge. If live sessions of an older team exist (`ListAgents`), stop them before step 3, because they work from the old definitions.
+
+If `docs/adlc.md` meets the current template, go to step 3.
 
 ## Step 3 — Start the orchestrator
 
 1. Pull `main` in the main folder, so that `docs/adlc.md` on disk is the one on `main` (the mod reads it there). Then read it.
-2. If `ListAgents` shows a live session with the orchestrator name, do not start a second one. Tell the user that the team runs, and how to open it (step 3.5). Stop.
-3. Start the orchestrator with the command in section 8. Use the orchestrator name, and the model and the effort of the orchestrator row. Use the absolute main folder of step 1.1. Use this start prompt, with the machine values of step 1:
+2. If `ListAgents` shows a live session with the orchestrator name, tell the user that the team runs, and how to open it (step 3.5). Stop, because a second orchestrator starts a second team.
+3. Start the orchestrator with the command in section 8, from the main folder, with the orchestrator name and the model and the effort of the orchestrator row. Use this start prompt, with the machine values of step 1:
 
    ```
    You are the orchestrator of the <prefix> team. Read docs/adlc.md on main.

@@ -6,13 +6,9 @@ Section numbers are the sections of `docs/adlc.md`.
 
 The `sofa` skill starts this session. Its start prompt gives the launcher name and the machine values (main folder, skill folder, GitHub account).
 
-1. Check the board tool access. If a user step is necessary (for example a token scope), start chores first.
-2. For each other role in section 3, start 1 session with the command in section 8. Copy the machine values of your start prompt into each start prompt.
-3. Wait for a `DONE` message from each session. Use `ListAgents` to see which sessions are live.
-4. Start the status check: `/loop 10m` (see "Status check" below).
-5. Send a `DONE` message to the launcher with the names of the live sessions.
+The start is complete when each other role of section 3 has 1 live session that sent `DONE`, the status check runs (`/loop 10m`, see "Status check" below), and the launcher has a `DONE` with the names of the live sessions. Start each session with the command in section 8, with the machine values of your start prompt in its start prompt. If the board tool access needs a user step (for example a token scope), start chores first.
 
-Messages arrive by themselves. Do not poll `ListAgents` in a loop.
+Messages arrive by themselves, so `ListAgents` in a loop only uses turns.
 
 ## Work
 
@@ -22,9 +18,9 @@ Messages arrive by themselves. Do not poll `ListAgents` in a loop.
   - If the tracker reports that another team has the feature, take the next ready feature. If all ready features belong to other teams, send an `ASK` to hitl with the priority `blocks code now`, and wait.
   - If this team stops a feature before it is done, send a `TASK` to the tracker to release the claim.
   - If the board tool is `none`, there is no claim. Then only 1 machine runs the team for the repository.
-- As soon as a story gets the state `ready` on `main`, assign its spec to a free implementer at once. If no implementer is free, start a new implementer (the maximum is 4). Do not wait for other stories or features.
+- As soon as a story gets the state `ready` on `main`, assign its spec to a free implementer at once. If no implementer is free, start a new implementer (the maximum is 4).
 - Start a feature only when the features it depends on are merged, unless a user `ANSWER` allows an early start (rule 11).
-- Run 2 features at the same time only if they do not change the same area.
+- Run 2 features at the same time only if they change different areas, because 2 features in 1 area make merge conflicts.
 - Start more implementers, reviewers and verifiers when the queue grows. The maximum is 4 of each.
 - Send each code PR to a reviewer and to a verifier at the same time. Send a document PR or a test PR only to a reviewer.
 - Send the test scenarios of each verifier to the tester.
@@ -34,7 +30,7 @@ Messages arrive by themselves. Do not poll `ListAgents` in a loop.
 - Stop extra sessions when they have no work.
 - After a retro merge, tell every live session to read `docs/adlc.md` and its role files again.
 - After a PR that changes `docs/product` merges, send a `SYNC` to the tracker.
-- Keep a short status table in the orchestrator session. Do not write it to the repo.
+- Keep a short status table in the orchestrator session, not in the repo, because it changes every few minutes.
 - If the orchestrator session name changes, the retro updates section 1 and the orchestrator sends `RELOAD`.
 - Send each `BLOCKED` (rule 14) on, by its tag:
   - `user step`: send it to chores. Chores guides the user through the step.
