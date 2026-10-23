@@ -17,10 +17,10 @@ Messages arrive by themselves. Do not poll `ListAgents` in a loop.
 ## Work
 
 - Keep a queue of features in roadmap order.
-- Claim a feature before you assign it to a specifier. Teams on other machines can work on the same repository, so the claim tells them that this team does the feature.
-  - Claim: set the GitHub account of the machine values as the assignee of the feature item on the board (the same field in Linear or Jira).
-  - Skip a feature that has a different assignee. Do not remove the assignee of another account. If all ready features have a different assignee, send an `ASK` to hitl with the priority `blocks code now`, and wait.
-  - The claim stays until the feature is done. If this team stops a feature before it is done, remove the claim.
+- Make sure that a feature is claimed by this team on the board before you assign it to a specifier. Teams on other machines can work on the same repository, and the claim tells them that this team does the feature (see the projecter).
+  - Send a `TASK` to the projecter to claim the next ready feature. Assign the feature only after the projecter sends `DONE` for the claim.
+  - If the projecter reports that another team has the feature, take the next ready feature. If all ready features belong to other teams, send an `ASK` to hitl with the priority `blocks code now`, and wait.
+  - If this team stops a feature before it is done, send a `TASK` to the projecter to release the claim.
   - If the board tool is `none`, there is no claim. Then only 1 machine runs the team for the repository.
 - As soon as a story gets the state `ready` on `main`, assign its spec to a free implementer at once. If no implementer is free, start a new implementer (the maximum is 4). Do not wait for other stories or features.
 - Start a feature only when the features it depends on are merged, unless a user `ANSWER` allows an early start (rule 11).

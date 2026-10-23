@@ -36,7 +36,7 @@ Repository rules:
 
 ## 2. Rules for all sessions
 
-1. Files on `main` are the source of truth. The board is only a copy of `main`.
+1. Files on `main` are the source of truth. The board is only a copy of `main`, plus the claims of the projecter (which team does which feature).
 2. Do not change `main` directly. Use a worktree, a branch and a pull request. Only the retro has a fast path (see section 6).
 3. Send all messages to the orchestrator with `SendMessage`. Do not send messages to other roles directly.
 4. Do not ask the user questions. Send the question to the orchestrator. The hitl session asks the user. Exceptions: hitl, retro, and chores (only to guide the user through a manual step).
@@ -73,7 +73,7 @@ Repository rules:
 | hitl | `yellow` | `claude-sonnet-5-5` | `medium` | 1 | Always running | — | `ASK` messages | `ANSWER` messages |
 | retro | `pink` | `claude-opus-5-5` | `medium` | 1 | The user changes or adds a role | — | `RETRO` signal | Updated `docs/adlc.md` on `main` |
 | planner | `cyan` | `claude-opus-5-5` | `medium` | 1 | Scope change, gap in PRD or roadmap, milestone done | prd:plan, prd:review, prd:explore | Gap or change | PR that updates PRD or roadmap |
-| projecter | `yellow` | `claude-sonnet-5-5` | `medium` | 1 | A PR that changes `docs/product` merges | prd:roadmap-sync | Merged roadmap | Board that matches `main` |
+| projecter | `yellow` | `claude-sonnet-5-5` | `medium` | 1 | A PR that changes `docs/product` merges, or the orchestrator asks for a claim | prd:roadmap-sync | Merged roadmap, or claim request | Board that matches `main`, and claims |
 | architect | `cyan` | `claude-opus-5-5` | `high` | 1 | On request, or when a reviewer reports an ADR finding | adr:* | Design question or ADR finding | Answer, ADR verdict, or PR with new or changed ADR |
 | specifier | `cyan` | `claude-opus-5-5` | `xhigh` | 1–2 | The orchestrator assigns a feature | prd:specifying-stories | Feature id | PR with the spec in the feature folder |
 | implementer | `green` | `claude-sonnet-5-5` | `high` | 1–4 | The orchestrator assigns a merged spec | relay (non-interactive), productivity:wrapping-up-sessions | Spec on `main` | PR, then merge and clean-up |
@@ -99,7 +99,8 @@ Where the two files differ, the repository role file wins. A role that is only i
 
 ```
 roadmap (main)
-  → orchestrator picks next ready feature that no other machine claimed, and claims it on the board
+  → orchestrator picks next ready feature
+  → projecter claims it on the board (if another team claimed it, the orchestrator picks the next one)
   → specifier: spec PR → merge
   → stories get the state ready (rule 11)
   → orchestrator at once assigns the spec to a free implementer (or starts one)
