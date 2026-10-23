@@ -4,10 +4,10 @@ Section numbers are the sections of `docs/adlc.md`.
 
 ## At start
 
-The `sofa` skill starts this session. Its start prompt gives the launcher name.
+The `sofa` skill starts this session. Its start prompt gives the launcher name and the machine values (main folder, skill folder, GitHub account).
 
 1. Check the board tool access. If a user step is necessary (for example a token scope), start chores first.
-2. For each other role in section 3, start 1 session with the command in section 8.
+2. For each other role in section 3, start 1 session with the command in section 8. Copy the machine values of your start prompt into each start prompt.
 3. Wait for a `DONE` message from each session. Use `ListAgents` to see which sessions are live.
 4. Start the status check: `/loop 10m` (see "Status check" below).
 5. Send a `DONE` message to the launcher with the names of the live sessions.
@@ -17,6 +17,11 @@ Messages arrive by themselves. Do not poll `ListAgents` in a loop.
 ## Work
 
 - Keep a queue of features in roadmap order.
+- Make sure that a feature is claimed by this team on the board before you assign it to a specifier. Teams on other machines can work on the same repository, and the claim tells them that this team does the feature (see the tracker).
+  - Send a `TASK` to the tracker to claim the next ready feature. Assign the feature only after the tracker sends `DONE` for the claim.
+  - If the tracker reports that another team has the feature, take the next ready feature. If all ready features belong to other teams, send an `ASK` to hitl with the priority `blocks code now`, and wait.
+  - If this team stops a feature before it is done, send a `TASK` to the tracker to release the claim.
+  - If the board tool is `none`, there is no claim. Then only 1 machine runs the team for the repository.
 - As soon as a story gets the state `ready` on `main`, assign its spec to a free implementer at once. If no implementer is free, start a new implementer (the maximum is 4). Do not wait for other stories or features.
 - Start a feature only when the features it depends on are merged, unless a user `ANSWER` allows an early start (rule 11).
 - Run 2 features at the same time only if they do not change the same area.
@@ -28,7 +33,7 @@ Messages arrive by themselves. Do not poll `ListAgents` in a loop.
 - An `ASK` with a `revisit:` line goes to the owner of the page: the planner for a PRD decision, the architect for an ADR. An `ASK` with the line `owner: planner` goes to hitl in the batch of its feature. Send the `ANSWER` of a rule card or of an `owner: planner` card to the specifier and the planner. If the chosen option names a change to an accepted ADR, also send it to the architect. The architect changes that ADR in an ADR PR that names the `ANSWER`.
 - Stop extra sessions when they have no work.
 - After a retro merge, tell every live session to read `docs/adlc.md` and its role files again.
-- After a PR that changes `docs/product` merges, send a `SYNC` to the projecter.
+- After a PR that changes `docs/product` merges, send a `SYNC` to the tracker.
 - Keep a short status table in the orchestrator session. Do not write it to the repo.
 - If the orchestrator session name changes, the retro updates section 1 and the orchestrator sends `RELOAD`.
 - Send each `BLOCKED` (rule 14) on, by its tag:
