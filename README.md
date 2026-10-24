@@ -12,8 +12,6 @@ Skills for Claude Code.
 | [sofa](skills/sofa/SKILL.md) | Software factory. Starts a team of Claude Code background sessions that build a product from the PRD and the roadmap of a repository. |
 | [wrapup](skills/wrapup/SKILL.md) | After the work of a session is on the default branch, deletes the local branch, removes the worktree, and moves the session back to the main checkout. |
 
-If a plugin of [claude-code-dev-plugins](https://github.com/ai-advanced-futures/claude-code-dev-plugins) has the same skill and you have the plugin turned on, the skill shows two times.
-
 ## Install
 
 Link each skill into `~/.claude/skills`. A link to this checkout gets each change after you pull.
