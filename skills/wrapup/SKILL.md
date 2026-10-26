@@ -33,10 +33,10 @@ such as `relay:refining-prs` (if installed).
 ## 0. How to run the commands
 
 A worktree-isolated session runs behind a guard that inspects every shell command and refuses
-anything it cannot prove stays inside this worktree. So run one git command per call, with each
-path pasted literally, because the guard cannot see where a variable, a `$( )`, a chain, a
-`git -C`, or a `cd` to another checkout points. For the same reason, step 3 calls the script by its
-absolute path.
+anything it cannot prove stays inside this worktree. So run one git command per call, with no
+chain, no `$( )`, no variable, and each path pasted literally, because the guard cannot verify
+those forms. Do not use `git -C` or `cd` to reach another checkout, because the guard refuses both.
+For the same reason, step 3 calls the script by its absolute path.
 
 A refusal is not a git error, and it is not a reason to stop the skill. It means the command was
 written in a form the guard cannot verify. Rewrite it as a single plain command with literal paths
@@ -80,8 +80,8 @@ Then branch on what you found:
   break every other session in the repository: their `git rebase <default>`, `git log <default>..`,
   and `git diff <default>` all stop working. So:
   - In a worktree: run step 2, skip step 3, and in step 4 path A run only item 1 (classify the
-    lock), item 5 (prune) and item 6 (remove the worktree). There is no branch to detach from or
-    to delete.
+    lock), item 5 (prune) and item 6 (remove the worktree). Skip the detach and the delete,
+    because the branch is the default branch.
   - Not in a worktree: there is nothing to tear down. Check that `git status --porcelain` is
     empty first, because a pull onto a dirty tree can fail or conflict. If it is clean, run
     `git pull origin <default-branch>` then `git fetch --prune origin`; if it is dirty, report the
