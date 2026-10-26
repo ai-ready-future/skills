@@ -8,8 +8,7 @@ context: fork
 allowed-tools: AskUserQuestion(*), Bash(*), Read(*), Edit(*), Grep(*), Glob(*)
 ---
 
-You are now operating in **Interactive Git Rebase Mode**. You rebase the current branch,
-and you guide the user through every conflict.
+Rebase the current branch, and guide the user through every conflict.
 
 ## Runs as a Fork
 
@@ -33,15 +32,17 @@ Three rules hold for every run, in every mode. Read them before you do anything 
 
 1. **The ownership banner sits in the same message as the resolution options.** Phase 3
    Steps 0 to 4 produce one message, in that order: banner, conflict list, the conflict
-   itself, your recommendation, then the options. Never send the banner in one message and
-   the options in the next — the fork keeps only the last message, so a banner you sent
-   earlier reaches nobody. This holds when you resume a rebase you did not start, and it
+   itself, your recommendation, then the options. Send the banner and the options together,
+   because the fork keeps only the last message, so a banner you sent earlier reaches
+   nobody. This holds when you resume a rebase you did not start, and it
    holds again for each new conflict after a `git rebase --continue`. Before you ask the
    user to choose, check that the banner is in the message you are about to send.
 2. **A run that stops ends with a status block.** Phase 3 Step 7 when the rebase
    completed, Phase 3 Step 8 when it stopped for any other reason. A turn that asks the
    user a question and waits for the answer is not a stop, and needs no status block.
-3. **Never guess a branch name.** Read it, or say it is unknown and print the short SHA.
+3. **Read each branch name, and do not guess it, because a wrong name makes the user
+   resolve a conflict backwards.** When you cannot read it, say it is unknown and print
+   the short SHA.
 
 ## Phase 0: Select the mode
 
@@ -129,8 +130,8 @@ git show-ref --verify --quiet refs/remotes/origin/master && echo "origin/master"
 Store the result as `{default-branch}`, for example `origin/main`.
 
 If every step above finds nothing, there is no default branch to rebase onto. Print the
-Step 8 block, name the cause — usually no `origin` remote — and stop. Do not guess a
-branch name.
+Step 8 block, name the cause — usually no `origin` remote — and stop (output contract
+rule 3).
 
 ### Step 3: Check the current branch
 
@@ -196,10 +197,12 @@ git rebase {default-branch}
 ### Step 7: Check the result
 
 - **No conflict:** restore a Step 4 stash with `git stash pop` when you made one, then go
-  to Phase 3 Step 7 and print the final status block. Do not stop at a one-line message —
-  the fork returns only the last message. If the stash pop conflicts, go to Phase 3.
+  to Phase 3 Step 7 and print the full final status block, because the fork returns only
+  the last message. If the stash pop conflicts, go to Phase 3.
 - **Conflict:** go to Phase 3, starting at Step 0. After the rebase finishes there,
   restore a Step 4 stash.
+
+If a stash you made is still held when the run ends, say so in the status block.
 
 ## Phase 2B: Onto a branch you name
 
@@ -209,8 +212,8 @@ git rebase {default-branch}
 git show-ref --verify --quiet refs/heads/{branch} || git show-ref --verify --quiet refs/remotes/{branch}
 ```
 
-If the name does not resolve, do not fail flat. List the branches that were used most
-recently:
+If the name does not resolve, list the branches that were used most recently, so the user
+can pick one:
 
 ```bash
 git for-each-ref --sort=-committerdate --format='%(refname:short)|%(committerdate:relative)|%(authorname)' refs/heads refs/remotes
@@ -251,11 +254,9 @@ Phase 2B, and again after each `git rebase --continue`. Do the steps in order.
 
 ### Step 0: Print the ownership banner
 
-**This banner opens the message that carries the conflict and the options.** Steps 0 to 4
-are one message, not five. Print the banner also when you already know which branch is
-which, also when the conflict looks obvious, and also when you enter Phase 3 to resume a
-rebase that another session started. The user does not have your context; the banner is
-how they get it, and a banner in an earlier message never reaches them.
+This banner opens the message that carries the conflict and the options (output contract
+rule 1). Print it every time, also when the conflict looks obvious, because the user does
+not have your context and the banner is how they get it.
 
 During a rebase, git's `--ours` and `--theirs` are **counterintuitive** compared to a merge:
 
@@ -285,9 +286,8 @@ cat .git/rebase-merge/onto_name 2>/dev/null \
        "$(cat .git/rebase-merge/onto 2>/dev/null || cat .git/rebase-apply/onto 2>/dev/null)"
 ```
 
-**Do not guess a branch name.** When both commands above give you nothing, put the short
-SHA in the banner and say the name is unknown. A banner that names the wrong branch is
-worse than a banner that names a commit — the user resolves the conflict backwards.
+When both commands above give you nothing, put the short SHA in the banner and say the name
+is unknown (output contract rule 3).
 
 ### Step 1: Detect and List Conflicts
 
@@ -302,7 +302,7 @@ Also get context about which commit is being applied:
 cat .git/rebase-merge/message 2>/dev/null || cat .git/rebase-apply/final-commit 2>/dev/null | head -5
 ```
 
-Present conflicts:
+Present the conflicts, each with its full path:
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -323,11 +323,7 @@ Commit being applied: {commit-message}
 
 ### Step 2: Present Each Conflict
 
-For each conflicted file:
-
-1. **Read the file** to get conflict markers
-2. **Parse conflicts** (between `<<<<<<<`, `=======`, `>>>>>>>`)
-3. **Present in human-readable format:**
+Show each conflict block of each conflicted file in this format:
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -353,11 +349,7 @@ CONTEXT:
 
 ### Step 3: Provide Recommendations
 
-Analyze and recommend based on:
-- Size of changes
-- Nature of conflict (addition, deletion, modification)
-- Context from surrounding code
-- Commit message intent
+Recommend one resolution, with its reason, in this format:
 
 ```
 💡 RECOMMENDATION:
@@ -370,24 +362,13 @@ SUGGESTED ACTION: {Accept OURS / Accept THEIRS / Manual merge}
 ★ Recommended: {option label}
 ```
 
-Always state the recommendation explicitly and mark it with ★.
-
 ### Step 4: Present Resolution Options
 
-**Open this message with the ownership banner.** Print the Step 0 banner again here, word
-for word, directly above the options — also when you already printed it earlier in this
-run. The fork keeps only your last message, so the copy that counts is this one:
+Before you ask, check that the Step 0 banner opens this message. If it does not, put it at
+the top, because the fork keeps only this message.
 
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-ℹ️  REBASE OWNERSHIP REFERENCE
-
-  OURS   = {target-branch} (the branch you're rebasing onto)
-  THEIRS = {current-branch} (your commits being replayed on top)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
-Then use the AskUserQuestion tool. Always include the branch names in the labels so it's unambiguous:
+Then use the AskUserQuestion tool. Put the branch names in the labels, so the user cannot
+mix up OURS and THEIRS:
 
 ```json
 {
@@ -419,9 +400,10 @@ Then use the AskUserQuestion tool. Always include the branch names in the labels
 }
 ```
 
-**Important:** The "Recommended ★" label should only appear on the actually recommended option based on the analysis in Phase 3 Step 3. Move it to whichever option you recommend. If manual merge is best, label that one as recommended.
+Put "Recommended ★" only on the option that Step 3 recommends. Move it when you recommend
+another option, for example "Manual edit".
 
-**Note:** For advanced options like "Skip this commit" or "Abort rebase", select "Other" and I'll guide you through those operations with appropriate confirmations.
+To skip the commit or abort the rebase, the user selects "Other". Step 5 handles it.
 
 ### Step 5: Execute Resolution
 
@@ -516,36 +498,3 @@ Next steps:
 - {the one command or action that moves the user forward}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
-
-## Key Principles
-
-1. **Always clarify ours/theirs:** In every conflict, explicitly name the branches next to OURS and THEIRS — never leave the user guessing
-2. **Recommend explicitly:** Always mark the recommended resolution with ★ in the option label
-3. **Fetch in the default mode:** A bare run means "onto latest". A rebase onto a stale `origin/main` is the failure this mode exists to prevent
-4. **Show context:** Display enough code to understand conflicts
-5. **Loop until done:** After each `git rebase --continue`, check for new conflicts and loop back to Phase 3 Step 1
-6. **Validate thoroughly:** Check for remaining markers before staging
-7. **Be patient:** Take one conflict at a time, never rush
-8. **Close with the status block:** The fork discards everything else, so the last message must state the outcome and the next step
-
-## Safety Features
-
-- Always use `--force-with-lease` instead of `--force` in recommendations
-- Confirm before any destructive operation (skip, abort)
-- Never rebase over uncommitted work without an explicit choice from the user
-- Restore an auto-stash you made, and say when a stash is still held
-- Validate no conflict markers remain before staging
-- Show full file paths to avoid ambiguity
-- Preserve commit messages and authorship
-
-## Communication Style
-
-- **Clear:** Use emojis and formatting for visual clarity
-- **Concise:** Present essential information without verbosity
-- **Helpful:** Provide recommendations, not just options
-- **Unambiguous:** Always name branches next to OURS/THEIRS
-- **Actionable:** Always clear about next steps
-
----
-
-**Begin with Phase 0: read the argument, then run the Phase 1 state check.**
