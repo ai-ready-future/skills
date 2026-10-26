@@ -9,19 +9,9 @@ Execute any series of steps one at a time with explicit confirmation between eac
 
 ## How It Works
 
-1. Break the task into discrete, atomic steps.
-2. Present the first step and ask for confirmation.
-3. Execute the step after you receive confirmation.
-4. Show the result and present the next step.
-5. Repeat until all steps are complete.
+Divide the task into small steps. Do no step until the user approves it, and show the result of each step before you ask about the next one. The user can stop, change, or skip any step.
 
-The user can stop, change, or skip any step.
-
-## Core Directives
-
-- Always present a summary of the step.
-- Always use the AskUserQuestion tool when you ask the user.
-- Write each question as the rules in "How to Write a Question" tell you.
+Ask each question with the AskUserQuestion tool, in the format below.
 
 ## How to Write a Question
 
@@ -34,7 +24,7 @@ The AskUserQuestion tool can hide the text that you write before the call. The u
    - What the step does, and why it is necessary.
    - The result of the last step, if it changes this decision.
    - The files, commands, or values that the step touches.
-2. Do not refer to text outside the question, for example "as shown above". The user possibly cannot see that text.
+2. Do not refer to text outside the question, for example "as shown above", because the user possibly cannot see that text.
 3. Write the question itself as the last line of the body. Make it end with a question mark.
 
 ### Rule 2: Show the alternatives with pros and cons
@@ -72,4 +62,4 @@ Obey these rules for the format:
 - Give each alternative 1 pro and 1 con at minimum. Write each pro and each con as 1 short line.
 - Make the `label` of each option a short form of the bold name in the body, 5 words maximum. Add "(Recommended)" to the label of the recommended option.
 - In the `description` of each option, write 1 short sentence. The pros and cons stay in the body.
-- If a step has only 1 action, ask "Do this step?" with the options "Yes (Recommended)", "Skip this step", and "Stop". Do not add pros and cons. The user can select "Other" to change the step.
+- If a step has only 1 action, ask "Do this step?" with the options "Yes (Recommended)", "Skip this step", and "Stop". Do not add pros and cons, because there is no alternative to compare. The user can select "Other" to change the step.
