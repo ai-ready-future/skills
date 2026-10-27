@@ -4,6 +4,7 @@ Skills for Claude Code.
 
 | Skill | Description |
 | --- | --- |
+| [bg-watch](skills/bg-watch/SKILL.md) | Watches the background sessions on a schedule. Restarts each session that stopped on an API error, sends it `retry`, and logs each jag decision. |
 | [dispatch](skills/dispatch/SKILL.md) | Forks the current session into a new background session that starts work on one item at once. |
 | [doc-style](skills/doc-style/SKILL.md) | Writing style for docs, README files, PRs, commits, comments, and chat replies. Paraphrased from the Google developer documentation style guide, with reference files that load on demand and an optional Vale check. |
 | [handoff](skills/handoff/SKILL.md) | Writes a handoff document in the reply, so that a new agent can continue the work of this conversation. |
@@ -17,7 +18,7 @@ Skills for Claude Code.
 Link each skill into `~/.claude/skills`. A link to this checkout gets each change after you pull.
 
 ```
-$ for s in dispatch handoff osaat rebase wrapup; do ln -s "$PWD/skills/$s" ~/.claude/skills/$s; done
+$ for s in bg-watch dispatch handoff osaat rebase wrapup; do ln -s "$PWD/skills/$s" ~/.claude/skills/$s; done
 ```
 
 Run the command from the root of this repository, on `main`.
@@ -25,6 +26,7 @@ Run the command from the root of this repository, on `main`.
 ## Tests
 
 ```
+$ bash skills/bg-watch/tests/bg-watch.test.sh
 $ bash skills/wrapup/tests/branch-landed.test.sh
 $ bash skills/wrapup/tests/self-teardown.test.sh
 ```
