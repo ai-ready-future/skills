@@ -18,9 +18,14 @@ for s in agents:
     lines = [l.strip() for l in t.split("\n") if l.strip() and not NOISE.match(l)]
     idx = [i for i,l in enumerate(lines) if re.search(r"API Error", l, re.I)]
     if not idx: continue
-    after = lines[idx[-1]+1:]
+    after, in_recap = [], False
+    for l in lines[idx[-1]+1:]:   # a "※recap:" footer can wrap over lines; it ends at "(disable recaps in /config)"
+        if l.startswith("※recap"): in_recap = True
+        if not in_recap: after.append(l)
+        if in_recap and "disable recaps" in l: in_recap = False
     # stuck = the API Error is the last real event (only completion marks, prompts, or queued messages follow)
-    real_after = [l for l in after if not re.match(r"^(✻|❯|›|…|\?|Checking for updates|\d+ agents|.*needs input)", l)]
+    # the terminal can drop letters, for example "1 neds input & 10"
+    real_after = [l for l in after if not re.match(r"^(✻|❯|›|…|\?|Checking for updates|\d+ agents|.*\bne+ds? input)", l)]
     out.append({"id": sid, "name": s.get("name"), "state": s.get("state"), "status": s.get("status",""),
                 "api_errors_in_log": len(idx),
                 "last_error": lines[idx[-1]][:110],

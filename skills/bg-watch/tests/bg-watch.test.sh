@@ -41,13 +41,16 @@ cat > "$FIXTURES/agents.json" <<'EOF'
  {"id":"s-ok","name":"ok-one","state":"working","status":"idle"},
  {"id":"s-clean","name":"clean-one","state":"done"},
  {"id":"self","name":"watcher","state":"working","status":"busy"},
- {"id":"s-busy","name":"busy-one","state":"working","status":"busy"}]
+ {"id":"s-busy","name":"busy-one","state":"working","status":"busy"},
+ {"id":"s-footer","name":"footer-one","state":"working","status":"busy"}]
 EOF
 printf '⏺ Bash(ls)\n  ⎿  API Error: 529 overloaded\n✻ Cooked for 3s\n  1234\n❯ \n' > "$FIXTURES/logs/s-stuck.txt"
 printf 'API Error: 500\n⏺ Read(file.txt)\n  ⎿  Read 10 lines\n' > "$FIXTURES/logs/s-ok.txt"
 printf '⏺ All good\n' > "$FIXTURES/logs/s-clean.txt"
 printf 'API Error: 500\n' > "$FIXTURES/logs/self.txt"
 printf 'API Error: 529\n❯ \n' > "$FIXTURES/logs/s-busy.txt"
+# Real footers: a recap block over more than one line, and "needs input" with letters lost.
+printf '● API Error: Connection lost\n※recap: We design the linter. Next: pick a\nlibrary? (disable recaps in /config)\n1 neds input & 10\n' > "$FIXTURES/logs/s-footer.txt"
 export CLAUDE_JOB_DIR="/somewhere/jobs/self/"
 
 # new_case NAME: a fresh state folder and call record for one case.
@@ -66,9 +69,10 @@ S="$BG_WATCH_STATE/sessions.jsonl"
 pyok "build: s-stuck is stuck"                  "$S" '{o["id"]: o["stuck"] for o in d}.get("s-stuck") is True'
 pyok "build: s-ok is not stuck"                 "$S" '{o["id"]: o["stuck"] for o in d}.get("s-ok") is False'
 pyok "build: s-busy is stuck"                   "$S" '{o["id"]: o["stuck"] for o in d}.get("s-busy") is True'
+pyok "build: recap and needs-input footers are not real events" "$S" '{o["id"]: o["stuck"] for o in d}.get("s-footer") is True'
 pyok "build: s-clean (no error) is left out"    "$S" '"s-clean" not in [o["id"] for o in d]'
 pyok "build: own session is left out"           "$S" '"self" not in [o["id"] for o in d]'
-pyok "build: agents.json lists all five IDs"    "$BG_WATCH_STATE/agents.json" 'sorted(d) == ["s-busy","s-clean","s-ok","s-stuck","self"]'
+pyok "build: agents.json lists all six IDs"     "$BG_WATCH_STATE/agents.json" 'sorted(d) == ["s-busy","s-clean","s-footer","s-ok","s-stuck","self"]'
 
 # --- run.py: jag --ask agrees with the flag ---
 new_case agree
@@ -84,7 +88,7 @@ check "agree: s-stuck shows restarted"          has "$C/out" "STUCK (+1), restar
 check "agree: mode is jag --ask"                has "$C/out" "jag mode: jag --ask"
 check "agree: no disagreement"                  has "$C/out" "jag disagrees: none"
 check "agree: RETRY_TO has stuck-one only"      has "$C/out" 'RETRY_TO: ["stuck-one"]'
-pyok "agree: log line has the jag decision"     "$BG_WATCH_STATE/jag-log.jsonl" 'len(d) == 1 and d[0]["jag_stuck"] == ["s-busy","s-stuck"] and d[0]["disagree"] == []'
+pyok "agree: log line has the jag decision"     "$BG_WATCH_STATE/jag-log.jsonl" 'len(d) == 1 and d[0]["jag_stuck"] == ["s-busy","s-footer","s-stuck"] and d[0]["disagree"] == []'
 pyok "agree: log line has all keys"             "$BG_WATCH_STATE/jag-log.jsonl" '{"at","mode","cmd","exit","seconds","input","output","flag_stuck","jag_stuck","disagree"} <= set(d[0])'
 
 # --- run.py: jag leaves out the stuck sessions ---
@@ -92,9 +96,9 @@ new_case disagree
 export FAKE_JAG_OUT='{"no_good_answer":true,"results":[]}'
 watch
 check "disagree: nothing restarted"             hasnt "$CALLS" "claude respawn"
-check "disagree: report names the sessions"     has "$C/out" "jag disagrees: s-busy, s-stuck"
+check "disagree: report names the sessions"     has "$C/out" "jag disagrees: s-busy, s-footer, s-stuck"
 check "disagree: RETRY_TO is empty"             has "$C/out" "RETRY_TO: []"
-pyok "disagree: log line has the disagreement"  "$BG_WATCH_STATE/jag-log.jsonl" 'd[0]["disagree"] == ["s-busy","s-stuck"] and d[0]["jag_stuck"] == []'
+pyok "disagree: log line has the disagreement"  "$BG_WATCH_STATE/jag-log.jsonl" 'd[0]["disagree"] == ["s-busy","s-footer","s-stuck"] and d[0]["jag_stuck"] == []'
 
 # --- run.py: jag --ask cannot run (exit 4) ---
 new_case askfail
