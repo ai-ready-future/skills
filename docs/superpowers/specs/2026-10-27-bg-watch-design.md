@@ -41,7 +41,7 @@ The user chose 1. A change to 2 later is one line in `SKILL.md`.
 - Name: `bg-watch`, in `skills/bg-watch/`. The slash command is `/bg-watch`.
 - Modes: `start [interval]` (default `5m`), `check`, and `stop`, as in the reference `SKILL.md`. The schedule prompt is `/bg-watch check`.
 - A session is stuck when an `API Error` line is the last real event in its `claude logs` output.
-- jag decides, with `jag --json --max-chars 8000 --ask`. If `--ask` exits 3 to 6, the script uses `jag -F stuck=true`. If jag is not installed, it uses its own `stuck` flag.
+- jag decides, with `jag --json --max-chars <N> --ask`. N is 8000, or 4 times the size of the input file if that is larger, so that jag does not leave out sessions. If `--ask` exits 3 to 6 or 126, the script uses `jag -F stuck=true`. If jag is not installed, it uses its own `stuck` flag.
 - The script also computes its own `stuck` flag for each session. This flag is only for comparison. It does not change the decision.
 - The rules of the reference stay: never `claude rm`, skip `busy`, skip the session that runs the skill, never read `~/.config/jag/`, never run `jag --check` or `jag --setup`.
 

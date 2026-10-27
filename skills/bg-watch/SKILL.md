@@ -44,7 +44,8 @@ Do the mode in `$ARGUMENTS`. If `$ARGUMENTS` is empty, do `start` with the defau
 4. Report to the user:
    - Show the stuck sessions first, with the mark **(+1)** and the words "restarted, now working, `retry` sent".
    - Then show the table of the sessions with the most failures.
-   - Then a **jag** part: the mode that ran, each session where jag and the flag do not agree, and the path of the jag log. If the script printed `jag error cause` and `jag error fix`, give them to the user.
+   - If the table shows `respawn failed`, give the user the session and the error text. The script did not send `retry` to it.
+   - Then a **jag** part: the mode that ran, each session where jag and the flag do not agree, and the path of the jag log. If the script printed `jag error cause` and `jag error fix`, give them to the user. If the script printed `jag left out`, tell the user that jag did not judge all sessions.
    - Tell the user what changed since the last check: new sessions, counts that went up, and sessions that moved into or out of the log window.
 
 ## Mode: stop

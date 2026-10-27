@@ -23,6 +23,7 @@ NOJAG_PATH="$NOJAG:/usr/bin:/bin"
 fails=0
 check() { local label="$1"; shift; if "$@"; then echo "ok   $label"; else echo "FAIL $label"; fails=$((fails+1)); fi; }
 has() { grep -qF -- "$2" "$1"; }
+rc0() { [ "$(cat "$C/rc")" = "0" ]; }
 hasnt() { ! grep -qF -- "$2" "$1"; }
 # pyok LABEL FILE EXPR: EXPR sees d, the JSON of FILE (a list of objects for a .jsonl file).
 pyok() {
@@ -42,7 +43,9 @@ cat > "$FIXTURES/agents.json" <<'EOF'
  {"id":"s-clean","name":"clean-one","state":"done"},
  {"id":"self","name":"watcher","state":"working","status":"busy"},
  {"id":"s-busy","name":"busy-one","state":"working","status":"busy"},
- {"id":"s-footer","name":"footer-one","state":"working","status":"busy"}]
+ {"id":"s-footer","name":"footer-one","state":"working","status":"busy"},
+ {"id":"s-recap","name":"recap-one","state":"working","status":"idle"},
+ {"id":"s-prose","name":"prose-one","state":"working","status":"idle"}]
 EOF
 printf '⏺ Bash(ls)\n  ⎿  API Error: 529 overloaded\n✻ Cooked for 3s\n  1234\n❯ \n' > "$FIXTURES/logs/s-stuck.txt"
 printf 'API Error: 500\n⏺ Read(file.txt)\n  ⎿  Read 10 lines\n' > "$FIXTURES/logs/s-ok.txt"
@@ -51,6 +54,9 @@ printf 'API Error: 500\n' > "$FIXTURES/logs/self.txt"
 printf 'API Error: 529\n❯ \n' > "$FIXTURES/logs/s-busy.txt"
 # Real footers: a recap block over more than one line, and "needs input" with letters lost.
 printf '● API Error: Connection lost\n※recap: We design the linter. Next: pick a\nlibrary? (disable recaps in /config)\n1 neds input & 10\n' > "$FIXTURES/logs/s-footer.txt"
+# A recap on one line that quotes an API Error, and real text that says "needs input".
+printf '⏺ Done\n※recap: We fixed the API Error retry. (disable recaps in /config)\n' > "$FIXTURES/logs/s-recap.txt"
+printf 'API Error: 500\n⏺ The form needs input validation\n' > "$FIXTURES/logs/s-prose.txt"
 export CLAUDE_JOB_DIR="/somewhere/jobs/self/"
 
 # new_case NAME: a fresh state folder and call record for one case.
@@ -58,7 +64,7 @@ new_case() {
   C="$ROOT/$1"; mkdir -p "$C"
   export BG_WATCH_STATE="$C/state" CALLS="$C/calls"
   : > "$CALLS"
-  unset FAKE_JAG_OUT FAKE_JAG_EXIT
+  unset FAKE_JAG_OUT FAKE_JAG_EXIT FAKE_RESPAWN_EXIT
 }
 watch() { PATH="${1:-$FAKE_PATH}" python3 "$SCRIPTS/run.py" > "$C/out" 2> "$C/err"; echo $? > "$C/rc"; }
 
@@ -72,12 +78,14 @@ pyok "build: s-busy is stuck"                   "$S" '{o["id"]: o["stuck"] for o
 pyok "build: recap and needs-input footers are not real events" "$S" '{o["id"]: o["stuck"] for o in d}.get("s-footer") is True'
 pyok "build: s-clean (no error) is left out"    "$S" '"s-clean" not in [o["id"] for o in d]'
 pyok "build: own session is left out"           "$S" '"self" not in [o["id"] for o in d]'
-pyok "build: agents.json lists all six IDs"     "$BG_WATCH_STATE/agents.json" 'sorted(d) == ["s-busy","s-clean","s-footer","s-ok","s-stuck","self"]'
+pyok "build: a recap that quotes an API Error is not an error" "$S" '"s-recap" not in [o["id"] for o in d]'
+pyok "build: real text with needs input is a real event" "$S" '{o["id"]: o["stuck"] for o in d}.get("s-prose") is False'
+pyok "build: agents.json lists all eight IDs"   "$BG_WATCH_STATE/agents.json" 'sorted(d) == ["s-busy","s-clean","s-footer","s-ok","s-prose","s-recap","s-stuck","self"]'
 
 # --- run.py: jag --ask agrees with the flag ---
 new_case agree
 watch
-check "agree: exit 0"                           has "$C/rc" "0"
+check "agree: exit 0"                           rc0
 check "agree: stop s-stuck"                     has "$CALLS" "claude stop s-stuck"
 check "agree: respawn s-stuck"                  has "$CALLS" "claude respawn s-stuck"
 check "agree: no stop for busy session"         hasnt "$CALLS" "claude stop s-busy"
@@ -110,10 +118,34 @@ check "askfail: error cause shown"              has "$C/out" "jag error cause: n
 check "askfail: error fix shown"                has "$C/out" "jag error fix: set a key"
 check "askfail: s-stuck restarted"              has "$CALLS" "claude respawn s-stuck"
 
+# --- run.py: jag cannot start (exit 126) ---
+new_case nostart
+export FAKE_JAG_EXIT=126 FAKE_JAG_OUT='jag: cannot start'
+watch
+check "nostart: free search follows"            has "$CALLS" "-F stuck=true"
+check "nostart: s-stuck restarted"              has "$CALLS" "claude respawn s-stuck"
+
+# --- run.py: respawn fails ---
+new_case respawnfail
+export FAKE_RESPAWN_EXIT=1
+watch
+check "respawnfail: exit 0"                     rc0
+check "respawnfail: table shows the failure"    has "$C/out" "respawn failed: cannot respawn s-stuck"
+check "respawnfail: RETRY_TO is empty"          has "$C/out" "RETRY_TO: []"
+
+# --- run.py: a session starts a turn after the first read ---
+new_case laterbusy
+sed 's/"name":"stuck-one","state":"working","status":"idle"/"name":"stuck-one","state":"working","status":"busy"/' \
+  "$FIXTURES/agents.json" > "$FIXTURES/agents-later.json"
+watch
+rm -f "$FIXTURES/agents-later.json"
+check "laterbusy: no stop for s-stuck"          hasnt "$CALLS" "claude stop s-stuck"
+check "laterbusy: RETRY_TO is empty"            has "$C/out" "RETRY_TO: []"
+
 # --- run.py: jag is not installed ---
 new_case nojag
 watch "$NOJAG_PATH"
-check "nojag: exit 0"                           has "$C/rc" "0"
+check "nojag: exit 0"                           rc0
 check "nojag: mode is built-in flag"            has "$C/out" "jag mode: built-in stuck flag (jag not installed)"
 check "nojag: s-stuck restarted"                has "$CALLS" "claude respawn s-stuck"
 
@@ -121,7 +153,7 @@ check "nojag: s-stuck restarted"                has "$CALLS" "claude respawn s-s
 new_case notjson
 export FAKE_JAG_OUT='not json'
 watch
-check "notjson: exit 0"                         has "$C/rc" "0"
+check "notjson: exit 0"                         rc0
 check "notjson: nothing restarted"              hasnt "$CALLS" "claude respawn"
 pyok "notjson: raw output is logged"            "$BG_WATCH_STATE/jag-log.jsonl" 'd[0]["output"] == "not json"'
 
@@ -144,7 +176,7 @@ echo '[{"id":"s-clean","name":"clean-one","state":"done"}]' > "$ROOT/quiet/agent
 FIXTURES="$ROOT/quiet" ; mkdir -p "$FIXTURES/logs"; cp "$ROOT/fixtures/logs/s-clean.txt" "$FIXTURES/logs/"
 watch
 FIXTURES="$ROOT/fixtures"
-check "quiet: exit 0"                           has "$C/rc" "0"
+check "quiet: exit 0"                           rc0
 check "quiet: jag is not called"                hasnt "$CALLS" "jag "
 check "quiet: mode says no session"             has "$C/out" "jag mode: no session with an API Error"
 
