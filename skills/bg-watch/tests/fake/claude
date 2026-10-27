@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Fake claude for the bg-watch tests. Records each call in $CALLS.
+echo "claude $*" >> "$CALLS"
+case "$1" in
+  agents) cat "$FIXTURES/agents.json" ;;
+  logs) cat "$FIXTURES/logs/$2.txt" 2>/dev/null ;;
+esac
+exit 0

@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Fake jag for the bg-watch tests. Records each call in $CALLS.
+# With --ask and $FAKE_JAG_OUT set: prints $FAKE_JAG_OUT and exits $FAKE_JAG_EXIT (default 0).
+# Else: prints the -F style JSON of the lines of the input file that contain stuck=true.
+echo "jag $*" >> "$CALLS"
+file="${*: -1}"
+if [[ " $* " == *" --ask "* && -n "${FAKE_JAG_OUT:-}" ]]; then
+  printf '%s' "$FAKE_JAG_OUT"
+  exit "${FAKE_JAG_EXIT:-0}"
+fi
+python3 - "$file" <<'PY'
+import json, sys
+lines = [{"number": i, "text": l.rstrip("\n"), "is_match": True, "cut": 0}
+         for i, l in enumerate(open(sys.argv[1]), 1) if "stuck=true" in l]
+print(json.dumps({"no_good_answer": False,
+                  "results": [{"path": sys.argv[1], "lines": lines}] if lines else []}))
+PY
