@@ -1,6 +1,6 @@
 # ADLC — Agent Development Life Cycle
 
-<!-- sofa-template-version: 4 -->
+<!-- sofa-template-version: 5 -->
 
 This file defines the agent team for this repository.
 The `sofa` skill reads this file to start the team.
@@ -64,25 +64,30 @@ Repository rules:
     - `team`: another role or a merge must act first.
 
     Then the role waits for the orchestrator.
+15. A session does more than 1 item. When the work of an item is on `main` (its PR merged) or the orchestrator stops the item, a session that worked in a worktree runs the `wrapup` skill: it removes the worktree and the branch and moves the session back to the main folder. Then the session sends `DONE` and waits for its next `TASK`.
+    - Read the state of a new item from `main` and from the `TASK`, not from the conversation, because the conversation can hold an older state or a compaction summary.
+    - If `wrapup` stops (for example on a commit that is not pushed), send `BLOCKED` with the cause. Do not delete the work.
 
 ## 3. Roles
 
-| Role | Colour | Model | Effort | Count | Starts when | Skills | Input | Output |
-|---|---|---|---|---|---|---|---|---|
-| orchestrator | `purple` | `claude-opus-5-5` | `medium` | 1 | The `sofa` skill starts it | loop | Messages from all roles | Routed messages, started sessions |
-| hitl | `yellow` | `claude-sonnet-5-5` | `medium` | 1 | Always running | — | `ASK` messages | `ANSWER` messages |
-| retro | `pink` | `claude-opus-5-5` | `medium` | 1 | The user changes or adds a role | — | `RETRO` signal | Updated `docs/adlc.md` on `main` |
-| planner | `cyan` | `claude-opus-5-5` | `medium` | 1 | Scope change, gap in PRD or roadmap, milestone done | prd:plan, prd:review, prd:explore | Gap or change | PR that updates PRD or roadmap |
-| tracker | `yellow` | `claude-sonnet-5-5` | `medium` | 1 | A PR that changes `docs/product` merges, or the orchestrator asks for a claim | prd:roadmap-sync | Merged roadmap, or claim request | Board that matches `main`, and claims |
-| architect | `cyan` | `claude-opus-5-5` | `high` | 1 | On request, or when a reviewer reports an ADR finding | adr:* | Design question or ADR finding | Answer, ADR verdict, or PR with new or changed ADR |
-| specifier | `cyan` | `claude-opus-5-5` | `xhigh` | 1–2 | The orchestrator assigns a feature | prd:specifying-stories | Feature id | PR with the spec in the feature folder |
-| implementer | `green` | `claude-sonnet-5-5` | `high` | 1–4 | The orchestrator assigns a merged spec | relay (non-interactive), productivity:wrapping-up-sessions | Spec on `main` | PR, then merge and clean-up |
-| reviewer | `green` | `claude-opus-5-5` | `high` | 1–4 | A PR is open | pr-flow:reviewing-prs, adr:reviewing-adr-adherence | PR number | Approve or request changes |
-| verifier | `green` | `claude-opus-5-5` | `high` | 1–4 | An implementer opens a code PR | verify, ui-judge:* | PR number and spec | Approve or request changes, and test scenarios for the tester |
-| tester | `blue` | `claude-sonnet-5-5` | `high` | 1 | A verifier sends test scenarios | ui-judge:* | Test scenarios | PR with new or changed e2e tests |
-| chores | `yellow` | `claude-sonnet-5-5` | `medium` | 1 | A manual step is necessary | — | Chore request | Checked state, after it guides the user through a user step if necessary |
+| Role | Colour | Model | Effort | Compact at | Count | Starts when | Skills | Input | Output |
+|---|---|---|---|---|---|---|---|---|---|
+| orchestrator | `purple` | `claude-opus-5-5` | `medium` | `400k` | 1 | The `sofa` skill starts it | loop | Messages from all roles | Routed messages, started sessions |
+| hitl | `yellow` | `claude-sonnet-5-5` | `medium` | `300k` | 1 | Always running | — | `ASK` messages | `ANSWER` messages |
+| retro | `pink` | `claude-opus-5-5` | `medium` | `400k` | 1 | The user changes or adds a role | — | `RETRO` signal | Updated `docs/adlc.md` on `main` |
+| planner | `cyan` | `claude-opus-5-5` | `medium` | `400k` | 1 | Scope change, gap in PRD or roadmap, milestone done | prd:plan, prd:review, prd:explore | Gap or change | PR that updates PRD or roadmap |
+| tracker | `yellow` | `claude-sonnet-5-5` | `medium` | `300k` | 1 | A PR that changes `docs/product` merges, or the orchestrator asks for a claim | prd:roadmap-sync | Merged roadmap, or claim request | Board that matches `main`, and claims |
+| architect | `cyan` | `claude-opus-5-5` | `high` | `400k` | 1 | On request, or when a reviewer reports an ADR finding | adr:* | Design question or ADR finding | Answer, ADR verdict, or PR with new or changed ADR |
+| specifier | `cyan` | `claude-opus-5-5` | `xhigh` | `400k` | 1–2 | The orchestrator assigns a feature | prd:specifying-stories, wrapup | Feature id | PR with the spec in the feature folder |
+| implementer | `green` | `claude-sonnet-5-5` | `high` | `300k` | 1–4 | The orchestrator assigns a merged spec | relay (non-interactive), wrapup | Spec on `main` | PR, then merge and clean-up |
+| reviewer | `green` | `claude-opus-5-5` | `high` | `400k` | 1–4 | A PR is open | pr-flow:reviewing-prs, adr:reviewing-adr-adherence | PR number | Approve or request changes |
+| verifier | `green` | `claude-opus-5-5` | `high` | `400k` | 1–4 | An implementer opens a code PR | verify, ui-judge:* | PR number and spec | Approve or request changes, and test scenarios for the tester |
+| tester | `blue` | `claude-sonnet-5-5` | `high` | `300k` | 1 | A verifier sends test scenarios | ui-judge:*, wrapup | Test scenarios | PR with new or changed e2e tests |
+| chores | `yellow` | `claude-sonnet-5-5` | `medium` | `300k` | 1 | A manual step is necessary | — | Chore request | Checked state, after it guides the user through a user step if necessary |
 
 Model and Effort: use the exact values in the table.
+
+Compact at: the size of the context window at which the session compacts its conversation by itself (`--autocompact`, section 8). Sessions do many items (rule 15), so their conversations get long. The value comes from the model: `400k` for Opus, `300k` for Sonnet, `200k` for Haiku. A new row, or a row that changes its model, takes the value of its model.
 
 Colour: the session colour that the built-in `/color` sets. It shows in the prompt border and in `claude agents`. The names are `red`, `blue`, `green`, `yellow`, `purple`, `orange`, `pink` and `cyan`. The mod of the `sofa` skill sets it when a session starts: it reads this table, and finds the role in the session name (`<prefix>-<role>[-n]`). This also stops the productivity session colour mod in that session, so the colour does not change with the topic.
 
@@ -238,12 +243,13 @@ Rules:
 The `sofa` skill starts the orchestrator. The orchestrator starts each other session. Start each session from the main folder of this machine (machine values, section 1):
 
 ```
-cd <main folder> && claude --bg -n <prefix>-<role>[-n] --model <model> [--effort <effort>] --permission-mode bypassPermissions "<start prompt>"
+cd <main folder> && claude --bg -n <prefix>-<role>[-n] --model <model> [--effort <effort>] --autocompact <compact at> --permission-mode bypassPermissions "<start prompt>"
 ```
 
-Use the Model and Effort columns in section 3 for `--model` and `--effort` (for example, a reviewer uses `--model claude-opus-5-5 --effort high`).
+Use the Model, Effort and Compact at columns in section 3 for `--model`, `--effort` and `--autocompact` (for example, a reviewer uses `--model claude-opus-5-5 --effort high --autocompact 400k`).
 Use the exact name `<prefix>-<role>[-n]`: the mod of the `sofa` skill finds the colour of the session from this name. The start prompt does not set the colour.
-A live session does not change its colour, model or effort after `RELOAD`. If section 3 changes the colour, the model, the effort or the name of a role, restart each session of that role when it has no work.
+Give each session a name that no other session of this repository has, live or stopped (`claude agents --json --all`). The first session of a role has no number. The next sessions take the lowest free number, from `-2`. A message goes to a name, so 2 sessions with 1 name make the list and the status table unclear.
+A live session does not change its colour, model, effort or compact value after `RELOAD`. If section 3 changes the colour, the model, the effort, the compact value or the name of a role, restart each session of that role when it has no work.
 If a role gets a new name and a new role gets the old name, the orchestrator stops each live session of the old name before it sends `RELOAD`. Then it starts the session again with the new name. Else, after the `RELOAD`, the session reads the new role that has the old name.
 
 Start prompt:
@@ -263,4 +269,4 @@ The orchestrator start prompt is in the `sofa` skill. It gives the machine value
 
 | Date | Change | Why |
 |---|---|---|
-| `<date>` | Created from the sofa template version 4 | Team setup for `<repo>` |
+| `<date>` | Created from the sofa template version 5 | Team setup for `<repo>` |
