@@ -25,7 +25,7 @@ Check these before step 2. If one is missing, tell the user the exact install st
 - Claude Code with `claude --bg`, `SendMessage`, `ListAgents`, `/loop` and `--autocompact`.
 - `gh` CLI, logged in to an account with write access to the repository.
 - Node, so that `npx ctx7@latest` runs (context7).
-- Plugins: `prd`, `adr`, `relay`, `pr-flow`, `productivity`, `ui-judge` (marketplace `claude-code-dev-plugins`), and `superpowers` (marketplace `claude-plugins-official`).
+- Plugins: `prd`, `adr`, `relay`, `pr-flow`, `ui-judge` (marketplace `claude-code-dev-plugins`), and `superpowers` (marketplace `claude-plugins-official`).
 - Skill: `verify` (used by the verifier role). It comes with Claude Code as `/verify`.
 - Skill: `wrapup` from this repository (rule 15 of the template: each session cleans up its worktree after an item). Install it with `npx skills add ai-ready-future/skills -s wrapup -g -a claude-code --copy -y`.
 
