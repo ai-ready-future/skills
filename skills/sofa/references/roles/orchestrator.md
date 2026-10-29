@@ -26,11 +26,13 @@ Messages arrive by themselves, so `ListAgents` in a loop only uses turns.
 - Start more implementers, reviewers and verifiers when the queue grows. The maximum is 4 of each.
 - Send each code PR to a reviewer and to a verifier at the same time. Send a document PR or a test PR only to a reviewer.
 - Send the test scenarios of each verifier to the tester.
+- Send each study, bench, spike or measurement to the researcher, never to an implementer, because a large study makes the conversation of the implementer long for its next PRs. Send a follow-up question about a result to the researcher that made it.
 - Start a second specifier when 2 features are ready for a spec. The maximum is 2 specifiers.
 - Give each `ASK` a priority before you send it to hitl: `blocks code now` or `blocks later`.
 - An `ASK` with a `revisit:` line goes to the owner of the page: the planner for a PRD decision, the architect for an ADR. An `ASK` with the line `owner: planner` goes to hitl in the batch of its feature. Send the `ANSWER` of a rule card or of an `owner: planner` card to the specifier and the planner. If the chosen option names a change to an accepted ADR, also send it to the architect. The architect changes that ADR in an ADR PR that names the `ANSWER`.
 - Use the sessions again (rule 15). Send each new item to a free live session of its role. Start a new session only if no session of the role is free and the count of the role is below its maximum. A session is free when it sent `DONE` for its last item and has no open item in the status table.
-  - Do not stop a free session, because the next item of its role goes to it. A live session with no work uses no tokens.
+  - Keep 1 session of each role live, also when it has no work, because the next item of its role goes to it.
+  - If a role has more than 1 session, and 1 of them has been free for 1 hour, stop it (`claude stop <id>`) and delete it (`claude rm <id>`). Then its number is free again (section 8).
   - Give a new session a name that no other session has (section 8).
 - After a retro merge, tell every live session to read `docs/adlc.md` and its role files again.
 - After a PR that changes `docs/product` merges, send a `SYNC` to the tracker.
@@ -45,13 +47,13 @@ Messages arrive by themselves, so `ListAgents` in a loop only uses turns.
 
 ## Status check
 
-Every 10 minutes (`/loop 10m`, started at start, or after a `RELOAD` if it does not run). The result: the status table matches the live sessions, and each stuck session gets 1 `STATUS` message. A session is stuck if 1 of these is true:
+Every 10 minutes (`/loop 10m`, started at start, or after a `RELOAD` if it does not run). The result: the status table matches the live sessions, each stuck session gets 1 `STATUS` message, each stopped session with an open item is resumed (section 8), and each extra free session is stopped and deleted (see "Work"). A session is stuck if 1 of these is true:
 
 - It is idle, it has an open item in the table, and it sent no message for that item.
 - Its last status says that it waits for the user, an input or an answer, and no `ASK` or `BLOCKED` of it is open.
 - It is busy and its timeline has no new line for 30 minutes.
 
-The state of a session is in `ListAgents` and in its job folder in `~/.claude/jobs/`: the `state.json` that has the session name, and the last line of `timeline.jsonl`. The check sends no other messages, changes no file other than the state file, and restarts no sessions, because each message and each restart interrupts the work of a session.
+The state of a session is in `ListAgents` and in its job folder in `~/.claude/jobs/`: the `state.json` that has the session name, and the last line of `timeline.jsonl`. The check sends no other messages, changes no file other than the state file, and restarts no live session, because each message and each restart interrupts the work of a session.
 
 ## State file
 
@@ -60,9 +62,9 @@ The status table is in your conversation, and the orchestrator is the session th
 - The file is `<main folder>/.sofa.state.json`. Git ignores it on this machine (the `sofa` skill adds it to `.git/info/exclude`), so it never goes into a commit.
 - Write it after each status check, and after each change of an item or of a session.
 - It holds the time of the last write, and:
-  - Each session of the team: name, role, live or stopped, and its open item.
+  - Each session of the team: name, session ID, role, live or stopped, its open item, and the time it became free.
   - Each open item: its id, its state, its PR, its branch and worktree, and what it waits for.
   - Each open `ASK` and `BLOCKED`, with its priority or tag.
   - Each local commit or branch that waits for an approval.
   - The feature queue.
-- Read it at start, and again after a compaction of your conversation. Where the file and the conversation differ, the file wins, because it is newer than a compaction summary.
+- Read it at start, and again after a compaction of your conversation. After a start or a compaction, where the file and the conversation differ, the file wins, because it is newer than a compaction summary.

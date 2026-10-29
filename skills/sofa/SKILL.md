@@ -1,6 +1,6 @@
 ---
 name: sofa
-description: 'Start a software factory: a team of Claude Code background sessions (orchestrator, hitl, retro, planner, tracker, architect, specifier, implementers, reviewers, verifiers, tester, chores) that build a product from the PRD and roadmap in a repo. Use when the user says "sofa", "start the team", "spawn the team" or "software factory".'
+description: 'Start a software factory: a team of Claude Code background sessions (orchestrator, hitl, retro, planner, tracker, architect, specifier, implementers, reviewers, verifiers, tester, chores, researcher) that build a product from the PRD and roadmap in a repo. Use when the user says "sofa", "start the team", "spawn the team" or "software factory".'
 disable-model-invocation: true
 ---
 
@@ -27,7 +27,7 @@ Check these before step 2. If one is missing, tell the user the exact install st
 - Node, so that `npx ctx7@latest` runs (context7).
 - Plugins: `prd`, `adr`, `relay`, `pr-flow`, `ui-judge` (marketplace `claude-code-dev-plugins`), and `superpowers` (marketplace `claude-plugins-official`).
 - Skill: `verify` (used by the verifier role). It comes with Claude Code as `/verify`.
-- Skill: `wrapup` from this repository (rule 15 of the template: each session cleans up its worktree after an item). Install it with `npx skills add ai-ready-future/skills -s wrapup -g -a claude-code --copy -y`.
+- All skills of `ai-ready-future/skills`, for example `wrapup` (rule 15 of the template: the author of a PR cleans up its worktree after the merge). Install them with `npx skills add ai-ready-future/skills -g -a claude-code`.
 
 The session colours need the mod. Claude Code loads it by itself when this skill folder is in `~/.claude/skills/sofa` or in the `.claude/skills/sofa` folder of the project. Some Claude Code builds (for example 2.1.257) do not load mods. Then tell the user that the team has no role colours, and continue, because the colours do not change the work.
 

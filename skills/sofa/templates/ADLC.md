@@ -64,7 +64,7 @@ Repository rules:
     - `team`: another role or a merge must act first.
 
     Then the role waits for the orchestrator.
-15. A session does more than 1 item. When the work of an item is on `main` (its PR merged) or the orchestrator stops the item, a session that worked in a worktree runs the `wrapup` skill: it removes the worktree and the branch and moves the session back to the main folder. Then the session sends `DONE` and waits for its next `TASK`.
+15. A session does more than 1 item. The session that merges a PR (its author) runs the `wrapup` skill right after the merge succeeds: `wrapup` confirms that the work is on `main`, removes the worktree and the branch, and moves the session back to the main folder. If the orchestrator stops an item before its PR merges, the author also runs `wrapup`. Then the session sends `DONE` and waits for its next `TASK`.
     - Read the state of a new item from `main` and from the `TASK`, not from the conversation, because the conversation can hold an older state or a compaction summary.
     - If `wrapup` stops (for example on a commit that is not pushed), send `BLOCKED` with the cause. Do not delete the work.
 
@@ -74,16 +74,17 @@ Repository rules:
 |---|---|---|---|---|---|---|---|---|---|
 | orchestrator | `purple` | `claude-opus-5-5` | `medium` | `400k` | 1 | The `sofa` skill starts it | loop | Messages from all roles | Routed messages, started sessions |
 | hitl | `yellow` | `claude-sonnet-5-5` | `medium` | `300k` | 1 | Always running | — | `ASK` messages | `ANSWER` messages |
-| retro | `pink` | `claude-opus-5-5` | `medium` | `400k` | 1 | The user changes or adds a role | — | `RETRO` signal | Updated `docs/adlc.md` on `main` |
-| planner | `cyan` | `claude-opus-5-5` | `medium` | `400k` | 1 | Scope change, gap in PRD or roadmap, milestone done | prd:plan, prd:review, prd:explore | Gap or change | PR that updates PRD or roadmap |
+| retro | `pink` | `claude-opus-5-5` | `medium` | `400k` | 1 | The user changes or adds a role | wrapup | `RETRO` signal | Updated `docs/adlc.md` on `main` |
+| planner | `cyan` | `claude-opus-5-5` | `medium` | `400k` | 1 | Scope change, gap in PRD or roadmap, milestone done | prd:plan, prd:review, prd:explore, wrapup | Gap or change | PR that updates PRD or roadmap |
 | tracker | `yellow` | `claude-sonnet-5-5` | `medium` | `300k` | 1 | A PR that changes `docs/product` merges, or the orchestrator asks for a claim | prd:roadmap-sync | Merged roadmap, or claim request | Board that matches `main`, and claims |
-| architect | `cyan` | `claude-opus-5-5` | `high` | `400k` | 1 | On request, or when a reviewer reports an ADR finding | adr:* | Design question or ADR finding | Answer, ADR verdict, or PR with new or changed ADR |
+| architect | `cyan` | `claude-opus-5-5` | `high` | `400k` | 1 | On request, or when a reviewer reports an ADR finding | adr:*, wrapup | Design question or ADR finding | Answer, ADR verdict, or PR with new or changed ADR |
 | specifier | `cyan` | `claude-opus-5-5` | `xhigh` | `400k` | 1–2 | The orchestrator assigns a feature | prd:specifying-stories, wrapup | Feature id | PR with the spec in the feature folder |
 | implementer | `green` | `claude-sonnet-5-5` | `high` | `300k` | 1–4 | The orchestrator assigns a merged spec | relay (non-interactive), wrapup | Spec on `main` | PR, then merge and clean-up |
 | reviewer | `green` | `claude-opus-5-5` | `high` | `400k` | 1–4 | A PR is open | pr-flow:reviewing-prs, adr:reviewing-adr-adherence | PR number | Approve or request changes |
 | verifier | `green` | `claude-opus-5-5` | `high` | `400k` | 1–4 | An implementer opens a code PR | verify, ui-judge:* | PR number and spec | Approve or request changes, and test scenarios for the tester |
 | tester | `blue` | `claude-sonnet-5-5` | `high` | `300k` | 1 | A verifier sends test scenarios | ui-judge:*, wrapup | Test scenarios | PR with new or changed e2e tests |
 | chores | `yellow` | `claude-sonnet-5-5` | `medium` | `300k` | 1 | A manual step is necessary | — | Chore request | Checked state, after it guides the user through a user step if necessary |
+| researcher | `cyan` | `claude-opus-5-5` | `high` | `400k` | 1 | The orchestrator sends a study, a bench, a spike or a measurement | find-docs, wrapup | Question, study, bench, spike or measurement | Result with sources, and answers to follow-up questions |
 
 Model and Effort: use the exact values in the table.
 
@@ -113,7 +114,7 @@ roadmap (main)
   → reviewer (code) and verifier (functions), at the same time: approve | request changes
        request changes → implementer fixes → reviewer and verifier (max 3 rounds)
        after 3 rounds  → hitl ASK
-  → implementer: merge → wrap-up (no worktree, no branch left)
+  → implementer: merge → `wrapup` (no worktree, no branch left)
   → tester: e2e tests from the verifier scenarios → test PR → reviewer → merge (does not block done, unless the spec says so)
   → orchestrator: mark done, send SYNC to tracker if roadmap changed
 ```
@@ -125,6 +126,7 @@ Side flows:
 - Gap in PRD or roadmap → planner → PR → tracker `SYNC`.
 - User decision → hitl.
 - Manual step → chores.
+- Study, bench, spike or measurement → researcher.
 - User changes a role → retro.
 - Blocker from any role → orchestrator → chores (`user step`), hitl (`decision`) or the role that must act (`team`) (rule 14).
 
@@ -191,7 +193,7 @@ Types:
 1. Make a worktree from `origin/main`.
 2. Change only `docs/adlc.md` and the files in `docs/adlc/roles/`.
 3. Open a PR. Send `REVIEW` to the orchestrator. A reviewer checks it as a document PR (role file of the reviewer). After the approval, merge it with squash (rule 12).
-4. Remove the worktree and the branch.
+4. Run `wrapup` (rule 15).
 5. Send `DONE` to the orchestrator. The orchestrator sends `RELOAD` to all sessions.
 
 ## 7. HITL card
@@ -248,8 +250,9 @@ cd <main folder> && claude --bg -n <prefix>-<role>[-n] --model <model> [--effort
 
 Use the Model, Effort and Compact at columns in section 3 for `--model`, `--effort` and `--autocompact` (for example, a reviewer uses `--model claude-opus-5-5 --effort high --autocompact 400k`).
 Use the exact name `<prefix>-<role>[-n]`: the mod of the `sofa` skill finds the colour of the session from this name. The start prompt does not set the colour.
-Give each session a name that no other session of this repository has, live or stopped (`claude agents --json --all`). The first session of a role has no number. The next sessions take the lowest free number, from `-2`. A message goes to a name, so 2 sessions with 1 name make the list and the status table unclear.
+Give each session a name that no other session of this repository has, live or stopped (`claude agents --json --all`). The first session of a role has no number. The next sessions take the lowest free number, from `-2`. A session that the orchestrator deleted (`claude rm`) is not in that list, so its number is free again. A message goes to a name, so 2 sessions with 1 name make the list and the status table unclear.
 A live session does not change its colour, model, effort or compact value after `RELOAD`. If section 3 changes the colour, the model, the effort, the compact value or the name of a role, restart each session of that role when it has no work.
+If a session stops before its item is done (for example on a network error, or when the computer sleeps), the orchestrator resumes it with the same command plus `--resume <session id>`. The session keeps its ID, its name and its conversation, so no new row appears. The orchestrator gets the session ID from its state file. Use this start prompt: `You were resumed. Continue your open item.` If the resume fails, start a new session.
 If a role gets a new name and a new role gets the old name, the orchestrator stops each live session of the old name before it sends `RELOAD`. Then it starts the session again with the new name. Else, after the `RELOAD`, the session reads the new role that has the old name.
 
 Start prompt:
