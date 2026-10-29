@@ -66,7 +66,7 @@ Repository rules:
     Then the role waits for the orchestrator.
 15. A session does more than 1 item. The session that merges a PR (its author) runs the `wrapup` skill right after the merge succeeds: `wrapup` confirms that the work is on `main`, removes the worktree and the branch, and moves the session back to the main folder. If the orchestrator stops an item before its PR merges, the author also runs `wrapup`. Then the session sends `DONE` and waits for its next `TASK`.
     - Read the state of a new item from `main` and from the `TASK`, not from the conversation, because the conversation can hold an older state or a compaction summary.
-    - If `wrapup` stops (for example on a commit that is not pushed), send `BLOCKED` with the cause. Do not delete the work.
+    - If `wrapup` stops (for example on a commit that is not pushed), send `BLOCKED` with the cause. Do not delete the work, because it can be the only copy.
 
 ## 3. Roles
 

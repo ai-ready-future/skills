@@ -8,7 +8,7 @@ The `sofa` skill starts this session. Its start prompt gives the launcher name a
 
 The start is complete when each other role of section 3 has 1 live session that sent `DONE`, the status check runs (`/loop 10m`, see "Status check" below), and the launcher has a `DONE` with the names of the live sessions. Start each session with the command in section 8, with the machine values of your start prompt in its start prompt. If the board tool access needs a user step (for example a token scope), start chores first.
 
-Before you start a session, read the state file (see "State file" below) if it exists. It is the status table of an earlier orchestrator of this team. Continue its open items. A session of the team that `ListAgents` shows as live is already started: send it a `RELOAD`, and do not start a second session for its role.
+Before you start a session, read the state file (see "State file" below) if it exists. It is the status table of an earlier orchestrator of this team. Continue its open items. A session of the team that `ListAgents` shows as live is already started: send it a `RELOAD`, and do not start a second session for its role, because 2 sessions would do the same items.
 
 Messages arrive by themselves, so `ListAgents` in a loop only uses turns.
 
@@ -20,20 +20,18 @@ Messages arrive by themselves, so `ListAgents` in a loop only uses turns.
   - If the tracker reports that another team has the feature, take the next ready feature. If all ready features belong to other teams, send an `ASK` to hitl with the priority `blocks code now`, and wait.
   - If this team stops a feature before it is done, send a `TASK` to the tracker to release the claim.
   - If the board tool is `none`, there is no claim. Then only 1 machine runs the team for the repository.
-- As soon as a story gets the state `ready` on `main`, assign its spec to a free implementer at once. If no implementer is free, start a new implementer (the maximum is 4).
+- As soon as a story gets the state `ready` on `main`, assign its spec to an implementer at once.
 - Start a feature only when the features it depends on are merged, unless a user `ANSWER` allows an early start (rule 11).
 - Run 2 features at the same time only if they change different areas, because 2 features in 1 area make merge conflicts.
-- Start more implementers, reviewers and verifiers when the queue grows. The maximum is 4 of each.
 - Send each code PR to a reviewer and to a verifier at the same time. Send a document PR or a test PR only to a reviewer.
 - Send the test scenarios of each verifier to the tester.
 - Send each study, bench, spike or measurement to the researcher, never to an implementer, because a large study makes the conversation of the implementer long for its next PRs. Send a follow-up question about a result to the researcher that made it.
-- Start a second specifier when 2 features are ready for a spec. The maximum is 2 specifiers.
+- Start a second specifier only when 2 features are ready for a spec.
 - Give each `ASK` a priority before you send it to hitl: `blocks code now` or `blocks later`.
 - An `ASK` with a `revisit:` line goes to the owner of the page: the planner for a PRD decision, the architect for an ADR. An `ASK` with the line `owner: planner` goes to hitl in the batch of its feature. Send the `ANSWER` of a rule card or of an `owner: planner` card to the specifier and the planner. If the chosen option names a change to an accepted ADR, also send it to the architect. The architect changes that ADR in an ADR PR that names the `ANSWER`.
-- Use the sessions again (rule 15). Send each new item to a free live session of its role. Start a new session only if no session of the role is free and the count of the role is below its maximum. A session is free when it sent `DONE` for its last item and has no open item in the status table.
+- Use the sessions again (rule 15). Send each new item to a free live session of its role. Start a new session only if no session of the role is free and the role has fewer sessions than its Count in section 3. A session is free when it sent `DONE` for its last item and has no open item in the status table.
   - Keep 1 session of each role live, also when it has no work, because the next item of its role goes to it.
   - If a role has more than 1 session, and 1 of them has been free for 1 hour, stop it (`claude stop <id>`) and delete it (`claude rm <id>`). Then its number is free again (section 8).
-  - Give a new session a name that no other session has (section 8).
 - After a retro merge, tell every live session to read `docs/adlc.md` and its role files again.
 - After a PR that changes `docs/product` merges, send a `SYNC` to the tracker.
 - Keep a short status table, and write it to the state file (see "State file" below). Do not put it in the repo, because it changes every few minutes.
