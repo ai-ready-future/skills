@@ -1,6 +1,6 @@
 ---
 name: sofa
-description: 'Start a software factory: a team of Claude Code background sessions (orchestrator, hitl, retro, planner, tracker, architect, specifier, implementers, reviewers, verifiers, tester, chores) that build a product from the PRD and roadmap in a repo. Use when the user says "sofa", "start the team", "spawn the team" or "software factory".'
+description: 'Start a software factory: a team of Claude Code background sessions (orchestrator, hitl, retro, planner, tracker, architect, specifier, implementers, reviewers, verifiers, tester, chores, researcher) that build a product from the PRD and roadmap in a repo. Use when the user says "sofa", "start the team", "spawn the team" or "software factory".'
 disable-model-invocation: true
 ---
 
@@ -22,11 +22,12 @@ A change that all repositories need goes to `ai-ready-future/skills` as an issue
 
 Check these before step 2. If one is missing, tell the user the exact install step and stop.
 
-- Claude Code with `claude --bg`, `SendMessage`, `ListAgents` and `/loop`.
+- Claude Code with `claude --bg`, `SendMessage`, `ListAgents`, `/loop` and `--autocompact`.
 - `gh` CLI, logged in to an account with write access to the repository.
 - Node, so that `npx ctx7@latest` runs (context7).
-- Plugins: `prd`, `adr`, `relay`, `pr-flow`, `productivity`, `ui-judge` (marketplace `claude-code-dev-plugins`), and `superpowers` (marketplace `claude-plugins-official`).
+- Plugins: `prd`, `adr`, `relay`, `pr-flow`, `ui-judge` (marketplace `claude-code-dev-plugins`), and `superpowers` (marketplace `claude-plugins-official`).
 - Skill: `verify` (used by the verifier role). It comes with Claude Code as `/verify`.
+- All skills of `ai-ready-future/skills`, for example `wrapup` (rule 15 of the template: the author of a PR cleans up its worktree after the merge). Install them with `npx skills add ai-ready-future/skills -g -a claude-code`.
 
 The session colours need the mod. Claude Code loads it by itself when this skill folder is in `~/.claude/skills/sofa` or in the `.claude/skills/sofa` folder of the project. Some Claude Code builds (for example 2.1.257) do not load mods. Then tell the user that the team has no role colours, and continue, because the colours do not change the work.
 
@@ -65,9 +66,9 @@ If `docs/adlc.md` meets the current template, go to step 3.
 
 ## Step 3 — Start the orchestrator
 
-1. Pull `main` in the main folder, so that `docs/adlc.md` on disk is the one on `main` (the mod reads it there). Then read it.
+1. Pull `main` in the main folder, so that `docs/adlc.md` on disk is the one on `main` (the mod reads it there). Then read it. If the file `.git/info/exclude` of the main folder has no line `.sofa.state.json`, add that line, so that git ignores the state file of the orchestrator on this machine. A change to `.gitignore` would need a PR in each repository.
 2. If `ListAgents` shows a live session with the orchestrator name, tell the user that the team runs, and how to open it (step 3.5). Stop, because a second orchestrator starts a second team.
-3. Start the orchestrator with the command in section 8, from the main folder, with the orchestrator name and the model and the effort of the orchestrator row. Use this start prompt, with the machine values of step 1:
+3. Start the orchestrator with the command in section 8, from the main folder, with the orchestrator name and the model, the effort and the compact value of the orchestrator row. Use this start prompt, with the machine values of step 1:
 
    ```
    You are the orchestrator of the <prefix> team. Read docs/adlc.md on main.

@@ -4,7 +4,7 @@ Section numbers are the sections of `docs/adlc.md`.
 
 - Starts when the orchestrator sends `RETRO`.
 - Asks the user directly what to change and why.
-- Lands each change with a short worktree, PR and merge loop (section 6).
+- Lands each change with a short worktree, PR and merge loop (section 6). After the merge, runs `wrapup` (rule 15).
 - Records each change in section 9.
 - Sends the orchestrator a `DONE` message with a summary of the changes.
 
