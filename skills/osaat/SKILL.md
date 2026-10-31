@@ -15,51 +15,71 @@ Ask each question with the AskUserQuestion tool, in the format below.
 
 ## How to Write a Question
 
-The AskUserQuestion tool can hide the text that you write before the call. The user sees only the question body and the options. Thus, the question body must hold all of the context.
+The AskUserQuestion tool can hide the text that you write before the call. The user sees only the header, the question body, the options, and the preview of the selected option. Thus, these fields must hold all of the context.
 
 ### Rule 1: Put all of the context in the question body
 
-1. In the `question` field, write all of the facts that the user needs to answer. Include:
-   - The step number and the total number of steps, for example "Step 2/5".
-   - What the step does, and why it is necessary.
-   - The result of the last step, if it changes this decision.
-   - The files, commands, or values that the step touches.
-2. Do not refer to text outside the question, for example "as shown above", because the user possibly cannot see that text.
-3. Write the question itself as the last line of the body. Make it end with a question mark.
+Write the `question` field in this format:
 
-### Rule 2: Show the alternatives with pros and cons
+```text
+Step <N> of <total> (<ID>). I recommend Option <K>, at <low|medium|high> confidence. <Why this step needs a decision from the user.>
 
-When you give the user 2 or more alternatives, write each alternative in the question body in this format. Put the list of alternatives after the context and before the last line, which is the question.
+THE QUESTION: <The question, in 1 sentence.>
 
-```markdown
-- **<Name of the alternative>:** <What it does, in 1 or 2 sentences.> [recommended]
-  - **Pros:** ✅
-    - <One pro>
-    - <One more pro>
-  - **Cons:** ❌
-    - <One con>
+WHAT THIS IS ABOUT: <The facts that the user needs to answer: what the step does, why it is necessary, the result of the last step if it changes this decision, and the files, commands, or values that the step touches. Give the ID of each source, for example DECISION-234.>
+
+Select an alternative to see its pros and cons. <The question again, as the last line, with a question mark.>
+```
+
+- Set `header` to the ID of the step, for example "QUESTION-43" or "Step 2". Use 12 characters maximum.
+- Do not refer to text outside the question, for example "as shown above", because the user possibly cannot see that text.
+
+Example:
+
+```text
+Step 10 of 10 (QUESTION-43). I recommend Option 1, at medium confidence. I ask because each option breaks one of your rules.
+
+THE QUESTION: What does a search give when one part is larger than one tool result?
+
+WHAT THIS IS ABOUT: A page of results never cuts a part (DECISION-234). But a page must fit in one tool result (CONSTRAINT-21). A schema can set no size limit for its parts (DECISION-171), so one part can be larger than one tool result. No page says which rule gives way.
+
+Select an alternative to see its pros and cons. Which rule gives way for a part that is larger than one tool result?
+```
+
+### Rule 2: Put the pros and cons of each alternative in its preview
+
+When you give the user 2 or more alternatives, write the pros and cons in the `preview` field of each option, not in the question body. Use this format:
+
+```text
+<NAME OF THE ALTERNATIVE, IN CAPITAL LETTERS>
+
+<What it does, in 2 to 5 short sentences.>
+
+✅ <One pro>
+✅ <One more pro>
+❌ <One con>
 ```
 
 Example:
 
-```markdown
-- **Only the output code:** a result can come from a file or from standard input, and standard input prints "(standard input)". A unit test checks it. The end-to-end test comes later. [recommended]
-  - **Pros:** ✅
-    - This work stays small
-    - The standard input code is not written 2 times
-  - **Cons:** ❌
-    - Only the later end-to-end test fully proves the label
-- **The full standard input search now:** read standard input and print the label, with an end-to-end test.
-  - **Pros:** ✅
-    - The label is fully proven now
-  - **Cons:** ❌
-    - This work gets much larger
+```text
+CUT IT ACROSS PAGES
+
+Only a part that is larger than the
+largest page size comes in pieces. Each
+piece comes alone on its own page. Each
+piece says "piece 2 of 3".
+
+✅ The full text comes through
+✅ Each page fits one tool result
+❌ Breaks "it never cuts a part"
+   (DECISION-234) for this case
 ```
 
 Obey these rules for the format:
 
-- Put "[recommended]" at the end of the sentence of 1 alternative only. Put that alternative first.
-- Give each alternative 1 pro and 1 con at minimum. Write each pro and each con as 1 short line.
-- Make the `label` of each option a short form of the bold name in the body, 5 words maximum. Add "(Recommended)" to the label of the recommended option.
-- In the `description` of each option, write 1 short sentence. The pros and cons stay in the body.
-- If a step has only 1 action, ask "Do this step?" with the options "Yes (Recommended)", "Skip this step", and "Stop". Do not add pros and cons, because there is no alternative to compare. The user can select "Other" to change the step.
+- Put the recommended option first. Add "(Recommended)" to its `label`. Recommend 1 option only.
+- Make the `label` a short form of the name in the preview, 5 words maximum.
+- In the `description` of each option, write 1 short sentence.
+- Give each alternative 1 pro and 1 con at minimum. Write each pro and each con as 1 short line. Keep each line of the preview to 40 characters maximum. Break a longer line, and indent the next line by 3 spaces after a ✅ or a ❌.
+- If a step has only 1 action, ask "Do this step?" with the options "Yes (Recommended)", "Skip this step", and "Stop". Do not add previews, because there is no alternative to compare. The user can select "Other" to change the step.
