@@ -1,0 +1,13 @@
+{
+  "name": "ai-ready-future-skills",
+  "owner": { "name": "ai-ready-future" },
+  "metadata": { "description": "Skills and plugins of ai-ready-future", "version": "1.0.0" },
+  "plugins": [
+    {
+      "name": "sofa",
+      "description": "Software factory: a team of Claude Code background sessions that build a product from the PRD and roadmap of a repository.",
+      "source": "./skills/sofa",
+      "strict": false
+    }
+  ]
+}

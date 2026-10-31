@@ -1,5 +1,5 @@
 import { expect, test } from 'claude-code/testing'
-import { colourFor, roleColours, roleOf, teamPrefix } from '../hooks/register.tsx'
+import { colourFor, memberOf, roleColours, roleColumn, roleOf, teamPrefix, upsertArgs } from '../hooks/register.tsx'
 
 const ADLC = [
   '| Team prefix | `acme` (session names are `<prefix>-<role>[-n]`) |',
@@ -51,4 +51,34 @@ test('gives a team session its colour, and no colour to other sessions', async (
 test('uses the template colour when docs/adlc.md has no Colour column', async () => {
   const fs = fakeFs({ '/repo/docs/adlc.md': OLD_ADLC, '/skill/templates/ADLC.md': TEMPLATE })
   expect(await colourFor(fs, '/repo', 'acme-hitl', '/skill')).toBe('yellow')
+})
+
+test('skips an earlier table whose first column is also Role', () => {
+  const twoTables = ['| Role | Tool |', '|---|---|', '| security | `semgrep` |', '', ADLC].join('\n')
+  expect(roleColours(twoTables).get('implementer')).toBe('green')
+  expect(roleColumn(twoTables, 'Tool').get('security')).toBe('semgrep')
+})
+
+test('reads any column of the roles table', () => {
+  expect(roleColumn(ADLC, 'Model').get('implementer')).toBe('claude-sonnet-5-5')
+  expect(roleColumn(ADLC, 'Output style').size).toBe(0)
+})
+
+test('finds the role and the model of a team session', async () => {
+  const fs = fakeFs({ '/repo/docs/adlc.md': ADLC })
+  expect(await memberOf(fs, '/repo', 'acme-implementer-2', '/skill')).toEqual({
+    role: 'implementer',
+    colour: 'green',
+    model: 'claude-sonnet-5-5',
+  })
+  expect(await memberOf(fs, '/repo', 'my-session', '/skill')).toBe(null)
+})
+
+test('builds the sofa-state arguments of a session start', () => {
+  const member = { role: 'hitl', colour: 'yellow', model: 'claude-sonnet-5-5' }
+  expect(upsertArgs('acme-hitl', 'abc', member)).toEqual([
+    'session', 'upsert', '--name', 'acme-hitl', '--id', 'abc', '--role', 'hitl', '--state', 'live',
+    '--model', 'claude-sonnet-5-5',
+  ])
+  expect(upsertArgs('acme-hitl', 'abc', { ...member, model: null })).not.toContain('--model')
 })

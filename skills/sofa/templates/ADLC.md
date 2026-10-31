@@ -1,15 +1,15 @@
 # ADLC — Agent Development Life Cycle
 
-<!-- sofa-template-version: 5 -->
+<!-- sofa-template-version: 6 -->
 
 This file defines the agent team for this repository.
 The `sofa` skill reads this file to start the team.
-Every session reads this file on `main`, then its role files (section 3, "Role files").
+Every session loads the `sofa:station` skill, reads this file on `main`, then its role files (section 3, "Role files").
 The retro session is the only owner of this file and of `docs/adlc/roles/`.
 
 ## 1. Setup values
 
-The `sofa` skill fills these values when it copies the template. They are the same on each machine that starts the team.
+The `sofa:setup` skill fills these values. They are the same on each machine that starts the team.
 
 | Key | Value |
 |---|---|
@@ -17,17 +17,34 @@ The `sofa` skill fills these values when it copies the template. They are the sa
 | Board tool | `<GitHub Projects \| Linear \| Jira \| none>` |
 | Team prefix | `<prefix>` (session names are `<prefix>-<role>[-n]`) |
 | Orchestrator name | `<prefix>-orchestrator` |
+| Risk appetite | `<mvp \| early customers \| established>` (section 4, "Decision tables") |
 | Product docs | `docs/product/prd`, `docs/product/roadmap` |
-| System design | `docs/product/system-design.md`, or `none` |
+| System design | `docs/product/system-design`, or `none` |
 | ADR folder | `docs/adr`. The list of ADRs and their status is in `docs/adr/README.md` |
+| Domain model | `docs/domain`, or `none` (the `ddd` brain) |
+| Proofs folder | `docs/proofs` (prototypes that support a proof of concept) |
 | Extra context files | `<paths that every session must read, or none>` |
 | Build | `<the command that builds, checks and tests the product before a PR, and the services it needs>` |
 | Run | `<how a verifier runs the product as a user: a terminal for a CLI, a browser (Playwright) for a web app>` |
+| Environments | `<name: how to reach it, how to deploy, where the logs and metrics are; one line per environment, or none>` |
+| Healthy window | `24h` (how long a feature must run as expected in production before `monitoring` sets it `released`) |
 | Reference program | `<a program whose behavior is a source for inferred rows, with its pinned version, or none>` |
+| Slack | `<channel name, or none>` (the token is in the environment, never here) |
+
+Tools per role. `built-in` means the role uses only the skills of its row.
+
+| Tool of | Tool |
+|---|---|
+| tracker | `<gh \| jira \| linear \| files>` |
+| security | `<built-in \| semgrep \| snyk \| ...>` |
+| code-quality | `<built-in \| sonarqube \| ...>` |
+| monitoring | `<built-in \| datadog \| grafana \| sentry \| ...>` |
+| feedback | `<none \| slack channel \| issues label \| form>` |
+| ux-quality | `<none \| sentry \| posthog>` |
 
 Machine values are not in this file, because they are different on each machine. The `sofa` skill finds them when it starts the team, and each start prompt gives them (section 8):
 - Main folder: the absolute path of the main checkout on this machine.
-- Skill folder: the absolute path of the installed `sofa` skill on this machine.
+- Skill folder: the absolute path of the installed `sofa` plugin on this machine.
 - GitHub account: the active `gh` account on this machine. Sessions commit, push and open PRs as this account.
 
 Repository rules:
@@ -36,99 +53,199 @@ Repository rules:
 
 ## 2. Rules for all sessions
 
-1. Files on `main` are the source of truth. The board is only a copy of `main`, plus the claims of the tracker (which team does which feature).
-2. Change `main` only with a worktree, a branch and a pull request, so that each change gets a review. Only the retro has a fast path (see section 6).
-3. Send all messages to the orchestrator with `SendMessage`, because the orchestrator routes them and keeps the status of each item.
-4. Send each question for the user to the orchestrator, so that the user gets all questions from the hitl session, in priority order. Exceptions: hitl, retro, and chores (only to guide the user through a manual step).
-5. Use the message format in section 5.
-6. When the orchestrator tells you that `docs/adlc.md` or a role file changed, read `docs/adlc.md` and your role files again, and rebase your worktree on `main`.
-7. Never read, print or commit secrets or key files, because session transcripts, PRs and issues are not private.
-8. Write all documents in ASD-STE100 Simplified Technical English.
-9. When you finish a task, send a `DONE` message. Then wait for the next message.
-10. Before you start, fetch documentation for libraries with context7 (`ctx7` CLI).
-11. A story has the state `ready` only if all of these are true:
+The rules that are the same for all roles are in the `sofa:station` skill, which every session loads at start. In short: stay in your role, ask the brains first, change `main` only through a PR, send each message to the orchestrator in the format of section 5, end each turn with 1 message, send `BLOCKED` at once when you cannot continue, write your state to the state store, and end each PR with the Proofs block.
+
+Rules that are only in this file:
+
+1. A story has the state `ready` only if all of these are true:
     - Its spec is merged on `main`.
-    - Its feature is not blocked: each feature in its `blocked_by` list has the state `done`.
+    - Its feature is not blocked: each feature in its `blocked_by` list has the state `done` or `released`.
     - No open `ASK` blocks the story.
 
     If one of these is false, the story stays in `backlog`. A role that changes the state of a story or a feature checks this rule in the same PR.
-    Exception: a user `ANSWER` can set the stories of a blocked feature to `ready` (for example, "start now"). The `blocked_by` list stays. The `Plan` line in `log.md` names the `ANSWER`.
+    Exception: an `ANSWER` can set the stories of a blocked feature to `ready` (for example, "start now"). The `blocked_by` list stays. The `Plan` line in `log.md` names the `ANSWER`.
     When a feature gets the state `done`, the same PR sets to `ready` each story that waited only for this feature and has a merged spec.
-12. Merge PRs with squash only.
-13. Turn exit rule. Each role except the orchestrator, hitl and retro ends each turn with 1 message to the orchestrator: `DONE`, `REVIEW`, `ASK`, `TASK`, `BLOCKED` or `STATUS`. If the role already sent this message for the same item and nothing changed, it does not send it again.
-    - A "needs input:" line, a question in the session, or a status line in the job list does not tell the orchestrator. Send the message.
-    - Never wait for the user, because the user does not see your session. Of the roles of this rule, only chores waits for the user, and only while it guides the user through a step.
-14. When a role cannot continue, it sends `BLOCKED` to the orchestrator at once. It does not try to work around the cause. The message gives the cause, the work that is done, where the work is (branch, commit, worktree), and 1 tag:
-    - `user step`: the user must do an action, for example a login, a token scope or a payment. Give the exact command if you know it.
-    - `decision`: the user must choose. Give the facts for the card, as for an `ASK`.
-    - `team`: another role or a merge must act first.
-
-    Then the role waits for the orchestrator.
-15. A session does more than 1 item. The session that merges a PR (its author) runs the `wrapup` skill right after the merge succeeds: `wrapup` confirms that the work is on `main`, removes the worktree and the branch, and moves the session back to the main folder. If the orchestrator stops an item before its PR merges, the author also runs `wrapup`. Then the session sends `DONE` and waits for its next `TASK`.
-    - Read the state of a new item from `main` and from the `TASK`, not from the conversation, because the conversation can hold an older state or a compaction summary.
-    - If `wrapup` stops (for example on a commit that is not pushed), send `BLOCKED` with the cause. Do not delete the work, because it can be the only copy.
+2. States of a story: `backlog` → `ready` → `in progress` → `done` → `released`. `monitoring` sets `released` (section 4, "Release flow"). A feature is `released` when each of its stories is.
+3. Each role writes only the files of its row in section 3, "Who writes which file".
 
 ## 3. Roles
 
-| Role | Colour | Model | Effort | Compact at | Count | Starts when | Skills | Input | Output |
-|---|---|---|---|---|---|---|---|---|---|
-| orchestrator | `purple` | `claude-opus-5-5` | `medium` | `400k` | 1 | The `sofa` skill starts it | loop | Messages from all roles | Routed messages, started sessions |
-| hitl | `yellow` | `claude-sonnet-5-5` | `medium` | `300k` | 1 | Always running | — | `ASK` messages | `ANSWER` messages |
-| retro | `pink` | `claude-opus-5-5` | `medium` | `400k` | 1 | The user changes or adds a role | wrapup | `RETRO` signal | Updated `docs/adlc.md` on `main` |
-| planner | `cyan` | `claude-opus-5-5` | `medium` | `400k` | 1 | Scope change, gap in PRD or roadmap, milestone done | prd:plan, prd:review, prd:explore, wrapup | Gap or change | PR that updates PRD or roadmap |
-| tracker | `yellow` | `claude-sonnet-5-5` | `medium` | `300k` | 1 | A PR that changes `docs/product` merges, or the orchestrator asks for a claim | prd:roadmap-sync | Merged roadmap, or claim request | Board that matches `main`, and claims |
-| architect | `cyan` | `claude-opus-5-5` | `high` | `400k` | 1 | On request, or when a reviewer reports an ADR finding | adr:*, wrapup | Design question or ADR finding | Answer, ADR verdict, or PR with new or changed ADR |
-| specifier | `cyan` | `claude-opus-5-5` | `xhigh` | `400k` | 1–2 | The orchestrator assigns a feature | prd:specifying-stories, wrapup | Feature id | PR with the spec in the feature folder |
-| implementer | `green` | `claude-sonnet-5-5` | `high` | `300k` | 1–4 | The orchestrator assigns a merged spec | relay (non-interactive), wrapup | Spec on `main` | PR, then merge and clean-up |
-| reviewer | `green` | `claude-opus-5-5` | `high` | `400k` | 1–4 | A PR is open | pr-flow:reviewing-prs, adr:reviewing-adr-adherence | PR number | Approve or request changes |
-| verifier | `green` | `claude-opus-5-5` | `high` | `400k` | 1–4 | An implementer opens a code PR | verify, ui-judge:* | PR number and spec | Approve or request changes, and test scenarios for the tester |
-| tester | `blue` | `claude-sonnet-5-5` | `high` | `300k` | 1 | A verifier sends test scenarios | ui-judge:*, wrapup | Test scenarios | PR with new or changed e2e tests |
-| chores | `yellow` | `claude-sonnet-5-5` | `medium` | `300k` | 1 | A manual step is necessary | — | Chore request | Checked state, after it guides the user through a user step if necessary |
-| researcher | `cyan` | `claude-opus-5-5` | `high` | `400k` | 1 | The orchestrator sends a study, a bench, a spike or a measurement | find-docs, wrapup | Question, study, bench, spike or measurement | Result with sources, and answers to follow-up questions |
+Tier: `always` sessions start with the team and stay live. `on demand` sessions start when an item needs the role, and stop after 1 hour free (orchestrator role file). `cron` is a system cron job, not a session.
+
+| Role | Tier | Colour | Model | Effort | Compact at | Output style | Count | Starts when | Skills | Input | Output |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| orchestrator | `always` | `purple` | `claude-opus-5-5` | `medium` | `400k` | `Proactive` | 1 | The `sofa` skill starts it | station, loop | Messages from all roles | Routed messages, started sessions |
+| hitl | `always` | `yellow` | `claude-sonnet-5-5` | `medium` | `300k` | `Concise` | 1 | Always running | station, loop, slack:* | `ASK` messages, Slack threads | `ANSWER` messages, digest |
+| requests | `always` | `yellow` | `claude-sonnet-5-5` | `medium` | `300k` | `Explanatory` | 1 | Always running | station, loop, knowledge:ask, slack:* | A request from a human | `TASK` to the orchestrator, answers to humans |
+| decision-judge | `always` | `purple` | `claude-opus-5-5` | `high` | `400k` | `Concise` | 1 | Always running | station, knowledge:ask | `BLOCKED · decision` cards | `ANSWER`, or `ASK` to hitl |
+| scribe | `always` | `orange` | `claude-sonnet-5-5` | `medium` | `300k` | `Concise` | 1 | Always running | station, knowledge:learn, knowledge:validate | Facts, answers, results | Pages in the `knowledge` brain, veracity updates |
+| tracker | `always` | `yellow` | `claude-haiku-5-5` | `medium` | `200k` | `Concise` | 1 | A PR that changes `docs/product` merges, or the orchestrator asks for a claim | station, product:roadmap-sync | Merged roadmap, or claim request | Board that matches `main`, and claims |
+| plan-auditor | `always` | `orange` | `claude-sonnet-5-5` | `high` | `300k` | `Concise` | 1 | Each merge on `main`, and every 30 minutes | station, loop, product:plan, wrapup | Merges, state store | PR with roadmap fixes and story metrics |
+| merger | `always` | `green` | `claude-haiku-5-5` | `medium` | `200k` | `Concise` | 1 | All reviews of a PR are in | station, rebase | PR number and verdicts | Merged PR, or `BLOCKED` |
+| monitoring | `always` | `blue` | `claude-sonnet-5-5` | `medium` | `300k` | `Concise` | 1 | An environment exists | station, loop | Logs, metrics, traces, evals | `released` PRs, problem reports |
+| scheduler | `cron` | — | `claude-haiku-5-5` | `low` | — | — | — | Every 5 minutes (system cron) | bg-watch | Session states | Restarted sessions |
+| retro | `on demand` | `pink` | `claude-opus-5-5` | `medium` | `400k` | `Concise` | 1 | The user changes or adds a role | station, wrapup | `RETRO` signal | Updated `docs/adlc.md` on `main` |
+| planner | `on demand` | `cyan` | `claude-opus-5-5` | `medium` | `400k` | `Concise` | 1 | Scope change, gap in PRD or roadmap, new request, milestone done | station, product:plan, product:review, product:explore, wrapup | Gap, change or request | PR that updates PRD or roadmap |
+| architect | `on demand` | `cyan` | `claude-opus-5-5` | `high` | `400k` | `Concise` | 1 | On request, or when a reviewer reports an ADR finding | station, architecture:*, wrapup | Design question or ADR finding | Answer, ADR verdict, or PR with new or changed ADR |
+| designer | `on demand` | `cyan` | `claude-opus-5-5` | `high` | `400k` | `Concise` | 1 | A system design question, a new module, or a PR that adds or removes a folder | station, system-design:*, wrapup | Design question, folder change | PR with system design, `CLAUDE.md` routers, `.claude/rules` |
+| business-domain | `on demand` | `cyan` | `claude-opus-5-5` | `high` | `400k` | `Concise` | 1 | A domain question, or a spec PR is open | station, business-domain:*, wrapup | Domain question, spec PR | Answer, domain review, PR with domain pages |
+| specifier | `on demand` | `cyan` | `claude-opus-5-5` | `xhigh` | `400k` | `Concise` | 1–2 | The orchestrator assigns a feature | station, product:specifying-stories, wrapup | Feature id | PR with the spec in the feature folder |
+| implementer | `on demand` | `green` | `claude-sonnet-5-5` | `high` | `300k` | `Concise` | 1–4 | The orchestrator assigns a merged spec | station, relay (non-interactive), wrapup | Spec on `main` | PR, then `wrapup` after the merge |
+| reviewer | `on demand` | `green` | `claude-opus-5-5` | `high` | `400k` | `Concise` | 1–4 | A PR is open | station, code-review:reviewing-prs, architecture:reviewing-adr-adherence | PR number | Approve or request changes |
+| verifier | `on demand` | `green` | `claude-opus-5-5` | `high` | `400k` | `Concise` | 1–4 | An implementer opens a code PR | station, verify, playwright | PR number and spec | Approve or request changes, the `product` proof line, and test scenarios |
+| tester | `on demand` | `blue` | `claude-sonnet-5-5` | `high` | `300k` | `Concise` | 1 | A verifier sends test scenarios | station, playwright, wrapup | Test scenarios | PR with new or changed e2e tests |
+| security | `on demand` | `red` | `claude-sonnet-5-5` | `high` | `300k` | `Concise` | 1 | A code PR is open, or a security question | station, security-review | PR number, question | `REVIEW` with findings, answers |
+| code-quality | `on demand` | `red` | `claude-sonnet-5-5` | `medium` | `300k` | `Concise` | 1 | A code PR is open | station, simplify | PR number | `REVIEW` with findings |
+| researcher | `on demand` | `cyan` | `claude-opus-5-5` | `high` | `400k` | `Explanatory` | 1 | A study, a bench, a spike, a measurement, or a search for existing proofs | station, find-docs, wrapup | Question | Result with sources, no conclusions |
+| troubleshooter | `on demand` | `red` | `claude-opus-5-5` | `high` | `400k` | `Explanatory` | 1 | A problem report | station, systematic-debugging | Problem | Root cause and proposed fix |
+| operator | `on demand` | `blue` | `claude-sonnet-5-5` | `medium` | `300k` | `Concise` | 1 | A command must run in an environment | station | Runbook task | Command results |
+| feedback | `on demand` | `blue` | `claude-haiku-5-5` | `medium` | `200k` | `Concise` | 1 | A feedback source exists (every 2 hours) | station, loop | Feedback sources | `TASK` suggestions |
+| ux-quality | `on demand` | `blue` | `claude-sonnet-5-5` | `medium` | `300k` | `Concise` | 1 | A ux tool exists (every 4 hours) | station, loop | Sentry or PostHog data | `TASK` suggestions |
+| updater | `on demand` | `orange` | `claude-haiku-5-5` | `low` | `200k` | `Concise` | 1 | Once a day | station, loop | Installed versions | Updated skills and plugins, `RELOAD` requests |
+| chores | `on demand` | `yellow` | `claude-sonnet-5-5` | `medium` | `300k` | `Concise` | 1 | A manual step is necessary | station | Chore request | Checked state |
 
 Model and Effort: use the exact values in the table.
 
-Compact at: the size of the context window at which the session compacts its conversation by itself (`--autocompact`, section 8). Sessions do many items (rule 15), so their conversations get long. The value comes from the model: `400k` for Opus, `300k` for Sonnet, `200k` for Haiku. A new row, or a row that changes its model, takes the value of its model.
+Compact at: the size of the context window at which the session compacts its conversation by itself (`--autocompact`, section 8). The value comes from the model: `400k` for Opus, `300k` for Sonnet, `200k` for Haiku. A new row, or a row that changes its model, takes the value of its model.
 
-Colour: the session colour that the built-in `/color` sets. It shows in the prompt border and in `claude agents`. The names are `red`, `blue`, `green`, `yellow`, `purple`, `orange`, `pink` and `cyan`. The mod of the `sofa` skill sets it when a session starts: it reads this table, and finds the role in the session name (`<prefix>-<role>[-n]`). This also stops the productivity session colour mod in that session, so the colour does not change with the topic.
+Output style: a built-in style of Claude Code, passed with `--settings '{"outputStyle":"<style>"}'`. The names are `Proactive`, `Concise`, `Explanatory` and `Learning`, case-sensitive.
+
+Colour: the session colour that the built-in `/color` sets. It shows in the prompt border and in `claude agents`. The names are `red`, `blue`, `green`, `yellow`, `purple`, `orange`, `pink` and `cyan`. The mod of the `sofa` plugin sets it when a session starts: it reads this table, and finds the role in the session name (`<prefix>-<role>[-n]`).
 
 ### Role files
 
 The work of each role is in its role files. A session reads them after this file:
 
-1. The skill role file: `<skill folder>/references/roles/<role>.md` (the skill folder is in your start prompt).
+1. The skill role file: `<skill folder>/references/roles/<role>.md`.
 2. The repository role file: `docs/adlc/roles/<role>.md`, if it exists. The retro writes it.
 
 Where the two files differ, the repository role file wins. A role that is only in this repository has only a repository role file.
 
-## 4. Feature flow
+### Who writes which file
+
+| File or brain | Writer |
+|---|---|
+| PRD, roadmap stories and features | planner |
+| Specs | specifier |
+| Story and feature metrics, missing roadmap stories | plan-auditor |
+| Board | tracker |
+| `adr` brain (`docs/adr`) | architect |
+| `system-design` brain, nested `CLAUDE.md` routers, `.claude/rules` | designer |
+| `ddd` brain | business-domain |
+| `knowledge` brain, veracity of every brain | scribe |
+| `docs/adlc.md`, `docs/adlc/roles/` | retro |
+| Product code | implementer |
+| e2e tests | tester |
+| State store (`.sofa/state.db`) | the mod hooks and `sofa-state` |
+
+## 4. Flows
+
+### Feature flow
 
 ```
 roadmap (main)
   → orchestrator picks next ready feature
   → tracker claims it on the board (if another team claimed it, the orchestrator picks the next one)
-  → specifier: spec PR → merge
-  → stories get the state ready (rule 11)
+  → specifier: spec PR (business-domain reviews the domain language) → merge
+       a spec with an unknown → specifier asks researcher for existing proofs
+       no proof exists → orchestrator coordinates a proof of concept (research or a prototype in docs/proofs/)
+       architect, designer or researcher learn the result into their brain
+  → stories get the state ready (rule 1)
   → orchestrator at once assigns the spec to a free implementer (or starts one)
-  → implementer: code PR → REVIEW
-  → reviewer (code) and verifier (functions), at the same time: approve | request changes
-       request changes → implementer fixes → reviewer and verifier (max 3 rounds)
-       after 3 rounds  → hitl ASK
-  → implementer: merge → `wrapup` (no worktree, no branch left)
-  → tester: e2e tests from the verifier scenarios → test PR → reviewer → merge (does not block done, unless the spec says so)
-  → orchestrator: mark done, send SYNC to tracker if roadmap changed
+  → implementer: code PR with the Proofs block → REVIEW
+  → reviewer (code, Proofs block, autonomous decisions), verifier (functions, product line), security and code-quality, at the same time
+       request changes → implementer fixes → the same roles again (max 3 rounds)
+       after 3 rounds  → decision-judge → hitl ASK
+  → merger: rebase if needed, squash merge → author runs `wrapup`
+  → tester: e2e tests from the verifier scenarios → test PR → reviewer → merger
+  → plan-auditor: story done, metrics in the state store
+  → orchestrator: send SYNC to tracker if roadmap changed
 ```
 
-Side flows:
-- Design question from any role → architect.
-- ADR finding from a reviewer → architect → hitl (section 4, "ADR finding flow").
-- Rule question from the specifier → hitl. A `revisit:` → planner or architect (section 4, "Ask the Rule").
-- Gap in PRD or roadmap → planner → PR → tracker `SYNC`.
-- User decision → hitl.
+### Release flow
+
+```
+feature done on main
+  → operator deploys (or CI deploys), reports the environment and the time
+  → monitoring watches the feature for the healthy window
+       healthy → PR that sets the stories and the feature to released → plan-auditor writes the metrics in the frontmatter
+       not healthy → troubleshooter → root cause → TASK to the orchestrator (implementer or operator)
+       no metric to watch → 1 ASK to hitl
+  → feedback and ux-quality propose a proof-of-intent score and improvements → hitl confirms → planner writes stories
+```
+
+### Decision flow
+
+```
+any role: BLOCKED · decision (with the result of knowledge:ask) → orchestrator
+  → decision-judge: knowledge:ask in a fork, assessor subagent (level, confidence, reversibility, visibility), cross-check
+       cell = decide → ANSWER to the orchestrator (line `decided by: decision-judge (...)`), decision in the state store, TASK to scribe
+       cell = ask    → hitl: card → human → ANSWER → decision-judge validates the pages it used (scribe)
+  → orchestrator sends the ANSWER to the role that asked, and to the planner or the architect when a rule or an ADR changes
+  → hitl: daily digest of the autonomous decisions. A veto by number → ASK, and the pages lose veracity
+```
+
+### Decision tables
+
+The assessor of `decision-judge` gives each question a **level** (`detail`, `middle`, `direction`) and a **confidence** (`high`, `medium`, `low`). A caution band selects the table. Points:
+
+| Dimension | Points |
+|---|---|
+| Reversibility: reversible | 0 |
+| Reversibility: hard to reverse (data shape, public API, migration, money, security, deletion) | 2 |
+| Reversibility: irreversible | always ask, no table |
+| Visibility: visible (a user or a tester sees the result at once) | 0 |
+| Visibility: hidden (the result shows later, in some cases, or only in the data) | 1 |
+| Stage of the feature: new | 0 |
+| Stage of the feature: released | 1 |
+| Risk appetite (section 1): `mvp` | 0 |
+| Risk appetite: `early customers` | 1 |
+| Risk appetite: `established` | 2 |
+
+Band: 0–1 `relaxed`, 2–3 `normal`, 4 or more `strict`.
+
+Relaxed:
+
+| Level | High | Medium | Low |
+|---|---|---|---|
+| Detail | Decide | Decide | Decide |
+| Middle | Decide | Decide | Ask |
+| Direction | Decide | Ask | Ask |
+
+Normal:
+
+| Level | High | Medium | Low |
+|---|---|---|---|
+| Detail | Decide | Decide | Ask |
+| Middle | Decide | Ask | Ask |
+| Direction | Ask | Ask | Ask |
+
+Strict:
+
+| Level | High | Medium | Low |
+|---|---|---|---|
+| Detail | Decide | Ask | Ask |
+| Middle | Ask | Ask | Ask |
+| Direction | Ask | Ask | Ask |
+
+A question with `priority: blocks later` at level `direction` is always `Ask`.
+
+### Side flows
+
+- Design question from any role → architect (ADR) or designer (system design).
+- Domain question → business-domain.
+- ADR finding from a reviewer → architect → decision flow (section 4, "ADR finding flow").
+- Rule question from the specifier → decision flow. A `revisit:` → planner or architect (section 4, "Ask the Rule").
+- Gap in PRD or roadmap, or a new request → planner → PR → tracker `SYNC`.
 - Manual step → chores.
-- Study, bench, spike or measurement → researcher.
+- Study, bench, spike, measurement, or a search for existing proofs → researcher.
+- Problem in an environment → troubleshooter.
+- Command in an environment → operator.
+- Security question → security.
+- A new folder in a PR → designer (router).
+- A new fact (an answer, a result, a retro outcome) → scribe.
 - User changes a role → retro.
-- Blocker from any role → orchestrator → chores (`user step`), hitl (`decision`) or the role that must act (`team`) (rule 14).
+- Blocker from any role → orchestrator → chores (`user step`), decision-judge (`decision`) or the role that must act (`team`).
 
 ### ADR finding flow
 
@@ -137,33 +254,33 @@ reviewer: ADR finding → VERDICT: CHANGES → orchestrator
   → orchestrator: finding → architect (starts the architect if it is not running)
   → architect: verdict → orchestrator → reviewer and implementer
        no ADR change          → reviewer: new VERDICT for the PR
-       contradicts ADR-NNNN   → ASK (change the code | change the ADR | deviate)
-       needs an ADR           → ASK (accept the decision | change the code)
-  → hitl: card → ANSWER
+       contradicts ADR-NNNN   → BLOCKED · decision (change the code | change the ADR | deviate)
+       needs an ADR           → BLOCKED · decision (accept the decision | change the code)
+  → decision flow → ANSWER
   → architect: ADR PR (status proposed) if the ANSWER changes an ADR, adds one, or deviates (`deviates_from`) → merge
   → implementer: code fix if the ANSWER says so
   → reviewer and verifier: new check of the code PR
 ```
 
-- The orchestrator gives the `ASK` the priority `blocks code now`.
+- The orchestrator gives the question the priority `blocks code now`.
 - The implementer does not change the code for an ADR finding before the `ANSWER`. An ADR finding and its new check are not one of the 3 review rounds.
-- The code PR does not merge until the `ANSWER` is in, the ADR PR (if there is one) is merged, and the reviewer and the verifier approve the last code. In the new check, the ADR of the merged ADR PR is the decision for the finding.
-- On the ADR PR of the architect, the reviewer checks that the ADR names the `ANSWER`. A change of an ADR that the `ANSWER` orders is not an ADR finding.
-- An ADR finding from a review is an exception to any rule that says "write the ADR now and do not stop to ask" (for example in `docs/adr/CLAUDE.md`). The user decides the direction first, because the review found a conflict.
+- The code PR does not merge until the `ANSWER` is in, the ADR PR (if there is one) is merged, and the reviewer and the verifier approve the last code.
+- On the ADR PR of the architect, the reviewer checks that the ADR names the `ANSWER`.
+- An ADR finding from a review is an exception to any rule that says "write the ADR now and do not stop to ask".
 
 ### Ask the Rule
 
-The specifier asks the user for the rule, not for the value. A spec meets these conditions:
+The specifier asks for the rule, not for the value. A spec meets these conditions:
 
 1. A rule card asks about 1 rule. Its answer decides 2 or more open rows, changes a PRD decision or an ADR, or decides a thing that is hard to undo. Hard to undo: a done feature, a public option, released behavior, public data, money. The answer of a card does not depend on another card in the same batch. No card asks about a row that `main` decides at the time that you send the card.
 2. Each rule card has the block `This answer decides:` with at most 5 lines, in plain words. 1 line can name a group of rows. The lines name each PRD decision and each ADR that changes, each done feature that changes, and each public option that goes away or changes.
-3. Round 1: at most 2 rule cards. A priority question that changes the order of features or a `blocked_by` link goes in the same batch, with the line `owner: planner`. The batch has at most 4 cards (hitl). Round 2: at most 2 cards, only for rows that stay open. A card that you send again counts as a round 2 card. There is no round 3. After round 2, each open row gets the recommended option with the source `default after round cap`, and the PR body names the row. If that row is hard to undo, send `BLOCKED` with the cause.
-4. A rule answer is 1 row with the source `human:<login>, <date>`. Each row that follows from it has the confidence `inferred`, the source `derived from row <n>`, and a place in the Assumptions list. If the user answers "other" or a different rule, the rows that followed from the old rule get derived again, and each card of the same batch whose premise changed goes out again.
-5. Each other inferred row has the option that you would mark `[recommended]` and 1 source that a reviewer can open. The sources, from strong to weak: an accepted ADR, a PRD decision page (a page with the line `Principle:` holds a rule from an earlier answer), or a `decided` area of the system design with an accepted ADR, a row of a built spec, the behavior of the reference program of section 1 at its pinned version, a line of the current code. A weak source does not count if a stronger source disagrees. A row with no source stays open. A hard-to-undo row is inferred only when a rule card named it, because the user cannot undo it in a review round.
-6. The body of the spec PR lists the inferred rows with their sources, the stories that need no build, and the spec groups. The reviewer approval is the answer "reject none", so the ledger question of the skill is not sent. Send these as 1 card only if you send round 2, or if the reviewer rejects a row.
-7. The owner of the page decides a change to an accepted ADR or a PRD decision that no card named. Send an `ASK` with the line `revisit: <page>`, the row, and the change that you recommend. A `revisit:` of an ADR goes to the architect, and the ADR finding flow continues from the verdict of the architect. A `revisit:` of a PRD decision goes to the planner, who sends a card only if the chosen option did not name the change. Until the owner decides, keep the current choice in that row, mark it `pending revisit`, keep only the dependent stories in `backlog`, and write the rest of the spec.
+3. Round 1: at most 2 rule cards. A priority question that changes the order of features or a `blocked_by` link goes in the same batch, with the line `owner: planner`. The batch has at most 4 cards. Round 2: at most 2 cards, only for rows that stay open. There is no round 3. After round 2, each open row gets the recommended option with the source `default after round cap`, and the PR body names the row. If that row is hard to undo, send `BLOCKED` with the cause.
+4. A rule answer is 1 row with the source `human:<login>, <date>` or `decision-judge:<D-id>, <date>`. Each row that follows from it has the confidence `inferred`, the source `derived from row <n>`, and a place in the Assumptions list.
+5. Each other inferred row has the option that you would mark `[recommended]` and 1 source that a reviewer can open. The sources, from strong to weak: an accepted ADR, a PRD decision page, a `decided` area of the system design, a page of the `ddd` or `knowledge` brain with high veracity, a row of a built spec, the behavior of the reference program of section 1 at its pinned version, a line of the current code. A weak source does not count if a stronger source disagrees. A row with no source stays open.
+6. The body of the spec PR lists the inferred rows with their sources, the stories that need no build, and the spec groups.
+7. The owner of the page decides a change to an accepted ADR or a PRD decision that no card named. Send a `BLOCKED · decision` with the line `revisit: <page>`, the row, and the change that you recommend. A `revisit:` of an ADR goes to the architect; a `revisit:` of a PRD decision goes to the planner.
 
-The ADR of a rule: `prd:specifying-stories` (step 5) writes 1 ADR with `status: proposed` for each rule row that binds code outside the stories of the feature (the rule of step 5), and no ADR for a derived row. The ADR holds only what the rule card showed: the chosen option and the lines of `This answer decides:`. The `ANSWER` of the rule card is the card that accepts that ADR (see the architect).
+The ADR of a rule: `product:specifying-stories` writes 1 ADR with `status: proposed` for each rule row that binds code outside the stories of the feature, and no ADR for a derived row. The `ANSWER` of the rule card is the card that accepts that ADR (see the architect).
 
 ## 5. Message format
 
@@ -177,23 +294,25 @@ Types:
 
 | Type | Meaning |
 |---|---|
-| `TASK` | Do this work |
+| `TASK` | Do this work. From a role to the orchestrator: a suggestion of work for another role |
 | `DONE` | Work is complete. Give links (PR, file) |
-| `REVIEW` | PR is ready for review |
-| `ASK` | A question for the user. Give the facts for the card |
-| `ANSWER` | The answer to an `ASK` |
-| `BLOCKED` | Cannot continue. Give the cause, where the work is, and 1 tag: `user step`, `decision` or `team` (rule 14) |
+| `REVIEW` | PR is ready for review, or a review result (`VERDICT: APPROVE` or `VERDICT: CHANGES`, then `Role: <role>`) |
+| `ASK` | A question for a human. Give the facts for the card |
+| `ANSWER` | The answer to an `ASK` or to a `BLOCKED · decision`. From decision-judge it has the line `decided by:` |
+| `BLOCKED` | Cannot continue. Give the cause, where the work is, and 1 tag: `user step`, `decision` or `team` |
 | `STATUS` | From the orchestrator: give your state. As a reply: 1 line with what you do now and the next step |
 | `SYNC` | Copy `main` to the board |
 | `RETRO` | User wants a team change |
 | `RELOAD` | `docs/adlc.md` or a role file changed. Read them again |
+| `PAUSE` | From the orchestrator: finish the turn, push the branch, send `STATUS`, then idle. With `now`: stop at once |
+| `RESUME` | From the orchestrator: continue the open item from the branch |
 
 ## 6. Retro fast path
 
 1. Make a worktree from `origin/main`.
 2. Change only `docs/adlc.md` and the files in `docs/adlc/roles/`.
-3. Open a PR. Send `REVIEW` to the orchestrator. A reviewer checks it as a document PR (role file of the reviewer). After the approval, merge it with squash (rule 12).
-4. Run `wrapup` (rule 15).
+3. Open a PR. Send `REVIEW` to the orchestrator. A reviewer checks it as a document PR. After the approval, the merger merges it with squash.
+4. Run `wrapup`.
 5. Send `DONE` to the orchestrator. The orchestrator sends `RELOAD` to all sessions.
 
 ## 7. HITL card
@@ -203,8 +322,9 @@ Always use this layout, in this order:
 1. The header: `from <role> → "<title>"`. The title tells the topic of the question in a few plain words.
 2. The related line: `Related: <background in plain words>`. Write it only when there is useful background.
 3. The question, in 1 sentence.
-4. The decides block, for a rule card only (section 4, "Ask the Rule"): the line `This answer decides:` and at most 5 lines below it. Each line names 1 detail, or 1 group of details, that the recommended option decides.
+4. The decides block, for a rule card only (section 4, "Ask the Rule"): the line `This answer decides:` and at most 5 lines below it.
 5. The options list: 1 bullet for each option, with the pros and the cons indented below it.
+6. For a card that `decision-judge` escalated: the line `Judge: <level>, <confidence>, <reversibility>, <visibility>, band <band>` and its recommended option.
 
 Example (markdown source):
 
@@ -229,41 +349,42 @@ What do we build now for the "(standard input)" label?
 ```
 
 Rules:
-- Plain words: Write the header, the related line, the question and the options in plain English (ASD-STE100 and the Google developer documentation style). Do not use IDs of features, stories, decisions, constraints or criteria, and do not use question IDs. Say what the item does in plain words.
-- Question IDs: Hitl keeps the question ID for itself. It uses the ID in the `ANSWER` message to the orchestrator, but not in the card.
-- Options: Start each option with a short bold name and a colon, then the description, with no number in front. Do not use tables, because tables do not show correctly on a mobile screen.
+- Plain words: Write the header, the related line, the question and the options in plain English. Do not use IDs of features, stories, decisions, constraints or criteria. Say what the item does in plain words.
+- Question IDs: Hitl keeps the question ID for itself. It uses the ID in the `ANSWER` message, but not in the card.
+- Options: Start each option with a short bold name and a colon, then the description, with no number in front. Do not use tables, because tables do not show correctly on a mobile screen or in Slack.
 - Recommended option: Put the text `[recommended]` at the end of the option. This is the only place of the recommendation.
-- Decides block: Write the lines in plain words, with no IDs. The user can veto 1 line with the answer `other: but <line>`.
-- Pros and cons: Write `**Pros:** ✅` and `**Cons:** ❌`. Give each option 1 or more pros and 1 or more cons. Put each pro and each con on its own indented bullet. Keep each bullet to a short phrase.
+- Pros and cons: Write `**Pros:** ✅` and `**Cons:** ❌`. Give each option 1 or more pros and 1 or more cons, each on its own indented bullet.
 - Emojis: Use only ✅ and ❌, and only on the Pros and Cons lines.
-- No repeated text: Give each fact 1 time only. For example, put the background in the related line, not in each option.
-- Number of options: Use 2 or 3 options. If there are 4 or more options, keep this layout.
-- `AskUserQuestion`: Use the short bold name of each option as its label.
+- Number of options: Use 2 or 3 options.
+- `AskUserQuestion`: Use the short bold name of each option as its label. In Slack, the card is the top message of a thread, and the options are the bullets.
 
 ## 8. Start commands
 
-The `sofa` skill starts the orchestrator. The orchestrator starts each other session. Start each session from the main folder of this machine (machine values, section 1):
+The `sofa` skill starts the orchestrator. The orchestrator starts each other session with the dispatch script of the plugin, from the main folder of this machine:
 
 ```
-cd <main folder> && claude --bg -n <prefix>-<role>[-n] --model <model> [--effort <effort>] --autocompact <compact at> --permission-mode bypassPermissions "<start prompt>"
+<skill folder>/scripts/dispatch.sh --adlc docs/adlc.md --role <role> [--n <n>] --prompt-file <file> [--resume <session id>]
 ```
 
-Use the Model, Effort and Compact at columns in section 3 for `--model`, `--effort` and `--autocompact` (for example, a reviewer uses `--model claude-opus-5-5 --effort high --autocompact 400k`).
-Use the exact name `<prefix>-<role>[-n]`: the mod of the `sofa` skill finds the colour of the session from this name. The start prompt does not set the colour.
-Give each session a name that no other session of this repository has, live or stopped (`claude agents --json --all`). The first session of a role has no number. The next sessions take the lowest free number, from `-2`. A session that the orchestrator deleted (`claude rm`) is not in that list, so its number is free again. A message goes to a name, so 2 sessions with 1 name make the list and the status table unclear.
-A live session does not change its colour, model, effort or compact value after `RELOAD`. If section 3 changes the colour, the model, the effort, the compact value or the name of a role, restart each session of that role when it has no work.
-If a session stops before its item is done (for example on a network error, or when the computer sleeps), the orchestrator resumes it with the same command plus `--resume <session id>`. The session keeps its ID, its name and its conversation, so no new row appears. The orchestrator gets the session ID from its state file. Use this start prompt: `You were resumed. Continue your open item.` If the resume fails, start a new session.
-If a role gets a new name and a new role gets the old name, the orchestrator stops each live session of the old name before it sends `RELOAD`. Then it starts the session again with the new name. Else, after the `RELOAD`, the session reads the new role that has the old name.
+The script reads the row of the role in section 3 and runs:
+
+```
+claude --bg -n <prefix>-<role>[-n] --model <model> [--effort <effort>] --autocompact <compact at> --settings '{"outputStyle":"<output style>"}' --permission-mode bypassPermissions "<start prompt>"
+```
+
+It prints the session id and the name. Give each session a name that no other session of this repository has, live or stopped (`claude agents --json --all`). The first session of a role has no number. The next sessions take the lowest free number, from `-2`. A session that the orchestrator deleted (`claude rm`) is not in that list, so its number is free again.
+
+A live session does not change its colour, model, effort, compact value or output style after `RELOAD`. If section 3 changes one of them, restart each session of that role when it has no work.
+
+If a session stops before its item is done, the `scheduler` (system cron, `bg-watch check`) restarts it and sends it `retry`. If the orchestrator finds a stopped session with an open item that the scheduler did not restart, it resumes it with the dispatch script and `--resume <session id>` and the prompt `You were resumed. Continue your open item.` If the resume fails, it starts a new session.
 
 Start prompt:
 
 ```
-You are the <role> of the <prefix> team. Read docs/adlc.md on main.
-Then read your role files (section 3, "Role files"): <skill folder>/references/roles/<role>.md,
-and docs/adlc/roles/<role>.md if it exists. Where they differ, the repository file wins.
-Do the role "<role>" as written there. The orchestrator is <orchestrator name>.
+You are the <role> of the <prefix> team. Load the skill sofa:station and do what it says at start.
+Your role files: <skill folder>/references/roles/<role>.md, and docs/adlc/roles/<role>.md if it exists.
+The orchestrator is <orchestrator name>.
 Machine values: main folder <main folder>, skill folder <skill folder>, GitHub account <gh account>.
-Send a DONE message to the orchestrator when you are ready. Then wait for TASK messages.
 ```
 
 The orchestrator start prompt is in the `sofa` skill. It gives the machine values, and the orchestrator copies them into each start prompt.
@@ -272,4 +393,4 @@ The orchestrator start prompt is in the `sofa` skill. It gives the machine value
 
 | Date | Change | Why |
 |---|---|---|
-| `<date>` | Created from the sofa template version 5 | Team setup for `<repo>` |
+| `<date>` | Created from the sofa template version 6 | Team setup for `<repo>` |

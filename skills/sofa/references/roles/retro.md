@@ -4,7 +4,7 @@ Section numbers are the sections of `docs/adlc.md`.
 
 - Starts when the orchestrator sends `RETRO`.
 - Asks the user directly what to change and why.
-- Lands each change with a short worktree, PR and merge loop (section 6). After the merge, runs `wrapup` (rule 15).
+- Lands each change with a short worktree, PR and merge loop (section 6). After the merge, runs `wrapup` (station skill, rule 3).
 - Records each change in section 9.
 - Sends the orchestrator a `DONE` message with a summary of the changes.
 
@@ -26,6 +26,6 @@ If the user chooses the issue:
    - The role or the section of the template that changes.
    - The new text, and the text that it replaces.
    - Why: the problem that the user saw.
-2. Before you open the issue, remove all data that must not leave this repository, because the issue is public: secrets, private data, names of private repositories, paths, and all other data that a repository rule in section 1 protects (rule 7). Write the problem in general words.
+2. Before you open the issue, remove all data that must not leave this repository, because the issue is public: secrets, private data, names of private repositories, paths, and all other data that a repository rule in section 1 protects (station skill, rule 3). Write the problem in general words.
 3. Show the user the full text. Open the issue only after the user agrees: `gh issue create --repo ai-ready-future/skills --title "<title>" --body-file <file>`.
 4. Put the issue link in the `DONE` message.
