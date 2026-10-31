@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Call practice</title>
+<style>
+  :root {
+    --ink: #22252a;
+    --soft: #6b6f76;
+    --line: #e4e2dd;
+    --paper: #ffffff;
+    --tint: #f6f5f2;
+    --blue: #1f4fa8;
+    --good: #2f7a4a;
+    --mid: #9a6a12;
+    --bad: #a8352b;
+    --serif: Charter, "Bitstream Charter", "Iowan Old Style", Georgia, serif;
+    --sans: -apple-system, "Segoe UI", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--paper); color: var(--ink); }
+  body { font-family: var(--serif); font-size: 19px; line-height: 1.55; }
+  .bar { height: 3px; background: var(--line); }
+  .bar i { display: block; height: 100%; width: 0; background: var(--blue); transition: width .3s; }
+  main { max-width: 640px; margin: 0 auto; padding: 40px 24px 64px; }
+  .meta { font-family: var(--sans); font-size: 13px; color: var(--soft); display: flex; justify-content: space-between; margin-bottom: 36px; }
+  .who { font-family: var(--sans); font-size: 13px; color: var(--soft); margin: 0 0 6px; }
+  .say { font-size: 25px; line-height: 1.4; margin: 0 0 32px; }
+  h1 { font-size: 38px; line-height: 1.15; font-weight: 600; margin: 0 0 16px; }
+  p { margin: 0 0 16px; }
+  .opts { list-style: none; padding: 0; margin: 0; }
+  .opts button {
+    display: flex; gap: 14px; width: 100%; text-align: left; font: inherit; color: inherit;
+    background: var(--paper); border: 1px solid var(--line); border-radius: 6px;
+    padding: 14px 16px; margin: 0 0 10px; cursor: pointer;
+  }
+  .opts button:hover { border-color: var(--blue); background: var(--tint); }
+  .opts button:focus-visible, .go:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  .opts span { min-width: 0; overflow-wrap: anywhere; }
+  .opts b { font-family: var(--sans); font-size: 13px; color: var(--soft); font-weight: 500; padding-top: 4px; }
+  .verdict { font-size: 30px; font-weight: 600; margin: 0 0 12px; }
+  .pts { font-family: var(--sans); font-size: 14px; color: var(--soft); margin: 0 0 24px; }
+  .good { color: var(--good); } .mid { color: var(--mid); } .bad { color: var(--bad); }
+  .reply { font-style: italic; color: var(--soft); margin: 0 0 24px; }
+  .alts { list-style: none; padding: 0; margin: 0 0 24px; }
+  .alts li { border-left: 3px solid var(--line); padding: 4px 0 4px 14px; margin: 0 0 18px; }
+  .alts li.good { border-left-color: var(--good); }
+  .alts li.mine { background: var(--tint); border-radius: 0 6px 6px 0; padding: 10px 14px; }
+  .alt-score { font-family: var(--sans); font-size: 13px; font-weight: 600; margin: 0 0 4px; }
+  .alt-text { margin: 0 0 4px; color: var(--ink); }
+  .alt-why { color: var(--soft); font-size: 17px; margin: 0; }
+  .real span { display: block; font-family: var(--sans); font-size: 13px; color: var(--soft); margin-bottom: 4px; }
+  .real { border-left: 3px solid var(--line); padding: 2px 0 2px 14px; margin: 0 0 24px; color: var(--soft); }
+  .go {
+    font-family: var(--sans); font-size: 15px; font-weight: 600; color: #fff; background: var(--blue);
+    border: 0; border-radius: 6px; padding: 12px 22px; cursor: pointer; margin-top: 8px;
+  }
+  .big { font-size: 64px; font-weight: 600; line-height: 1; margin: 8px 0 12px; }
+  .keep { padding-left: 20px; margin: 0 0 24px; }
+  .keep li { margin-bottom: 12px; }
+  .hint { font-family: var(--sans); font-size: 13px; color: var(--soft); margin-top: 28px; }
+  @media (max-width: 520px) { body { font-size: 17px; } .say { font-size: 21px; } h1 { font-size: 30px; } }
+  @media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+</style>
+</head>
+<body>
+<div class="bar"><i id="bar"></i></div>
+<main id="app" aria-live="polite"></main>
+
+<script>
+"use strict";
+
+// ---------- Game data: the only part that practice writes ----------
+// Each scene: min (time on the call), who speaks, say (their line), best (the line to keep),
+// opts: exactly 4, each { t: what you say, p: points 0-10 (one option is 10), why: the lesson, r: their reply }.
+// Optional: real (what was said on a real call), set (a flag name) on an option, and functions (f) => text
+// that read flags set by earlier picks. A chapter is { chapter: "Title", text: "..." }.
+/*GAME_DATA_START*/
+const GAME = {
+  title: "The discovery call",
+  intro: "You have 30 minutes with the buyer. Pick what you say. After each answer, see how it landed.",
+  start: "Start the call",
+  scenes: [
+    { min: "Minute 0", who: "Buyer", say: "Thanks for making the time. Where do you want to start?",
+      best: "Can I ask a few questions about where you want to get to? I'll leave time for yours.",
+      opts: [
+        { t: "'Can I ask a few questions about where you want to get to? I'll leave time for yours.'", p: 10, why: "You lead with their goals.", r: "Sure." },
+        { t: "'Let me walk you through my approach first.'", p: 0, why: "You pitch before you know the problem.", r: "Okay." },
+        { t: "'Let me tell you about my background.'", p: 3, why: "Your background matters less than their problem.", r: "Go ahead." },
+        { t: "'Whatever you prefer.'", p: 5, why: "Polite, but you give away the agenda.", r: "Tell me about you, then." }
+      ] }
+  ],
+  results: [
+    { min: 90, label: "Contract signed", text: "You found the target, held your number, and closed with a clear next step." },
+    { min: 75, label: "Second call booked", text: "Strong call. A few habits cost you points. Look at the lines below." },
+    { min: 60, label: "Maybe later", text: "Good rapport, but the buyer does not see a plan they can defend yet." },
+    { min: 0,  label: "We'll be in touch", text: "Too much method, too few questions. Play again and lead with their goals." }
+  ]
+};
+/*GAME_DATA_END*/
+const SCENES = GAME.scenes;
+const RESULTS = GAME.results;
+
+// ---------- Engine (no DOM) ----------
+function newGame() { return { i: 0, score: 0, max: 0, flags: {}, picks: [] }; }
+function isChapter(s) { return !!s.chapter; }
+function val(x, flags) { return typeof x === "function" ? x(flags) : x; }
+function choose(g, optIndex) {
+  const s = SCENES[g.i];
+  const o = s.opts[optIndex];
+  const top = Math.max.apply(null, s.opts.map(function (x) { return x.p; }));
+  g.score += o.p; g.max += top;
+  if (o.set) g.flags[o.set] = true;
+  g.picks.push({ scene: g.i, p: o.p, top: top });
+  return o;
+}
+function percent(g) { return g.max ? Math.round(100 * g.score / g.max) : 0; }
+function result(g) { const pc = percent(g); return RESULTS.find(function (r) { return pc >= r.min; }); }
+function verdict(p) { return p >= 10 ? ["Strong", "good"] : p >= 6 ? ["Fine", "mid"] : p >= 3 ? ["Weak", "bad"] : ["Costly", "bad"]; }
+
+// ---------- View ----------
+const app = document.getElementById("app");
+const bar = document.getElementById("bar");
+let g = newGame();
+let order = [];
+
+function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+function shuffle(n) { const a = []; for (let k = 0; k < n; k++) a.push(k); for (let k = n - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); const t = a[k]; a[k] = a[j]; a[j] = t; } return a; }
+function progress() { bar.style.width = Math.round(100 * g.i / SCENES.length) + "%"; }
+function focusFirst(sel) { const el = app.querySelector(sel); if (el) el.focus(); }
+
+function intro() {
+  g = newGame(); progress();
+  app.innerHTML =
+    '<h1>' + esc(GAME.title) + '</h1>' +
+    '<p>' + esc(GAME.intro) + '</p>' +
+    '<button class="go" id="go">' + esc(GAME.start) + '</button>' +
+    '<p class="hint">Keys: 1 to 4 to answer, Enter to continue.</p>';
+  document.getElementById("go").onclick = scene;
+  focusFirst("#go");
+}
+
+function scene() {
+  progress();
+  if (g.i >= SCENES.length) return end();
+  const s = SCENES[g.i];
+  if (isChapter(s)) {
+    app.innerHTML = '<h1>' + esc(s.chapter) + '</h1><p>' + esc(s.text) + '</p><button class="go" id="go">Continue</button>';
+    document.getElementById("go").onclick = function () { g.i++; scene(); };
+    return focusFirst("#go");
+  }
+  order = shuffle(s.opts.length);
+  let html = '<div class="meta"><span>' + esc(s.min) + '</span><span>' + (g.max ? percent(g) + "%" : "") + '</span></div>' +
+    '<p class="who">' + esc(s.who) + '</p><p class="say">' + esc(val(s.say, g.flags)) + '</p><ol class="opts">';
+  order.forEach(function (oi, k) { html += '<li><button data-k="' + k + '"><b>' + (k + 1) + '</b><span>' + esc(val(s.opts[oi].t, g.flags)) + '</span></button></li>'; });
+  app.innerHTML = html + '</ol>';
+  app.querySelectorAll(".opts button").forEach(function (b) { b.onclick = function () { answer(+b.dataset.k); }; });
+  focusFirst(".opts button");
+}
+
+function answer(k) {
+  const s = SCENES[g.i];
+  const f = Object.assign({}, g.flags);
+  const o = choose(g, order[k]);
+  const v = verdict(o.p);
+  let html = '<div class="meta"><span>' + esc(s.min) + '</span><span>' + percent(g) + '%</span></div>' +
+    '<p class="verdict ' + v[1] + '">' + v[0] + '</p>' +
+    (o.r ? '<p class="reply">' + esc(s.who) + ': "' + esc(val(o.r, f)) + '"</p>' : '');
+  const ranked = s.opts.map(function (x, n) { return { x: x, n: n }; })
+    .sort(function (a, b) { return b.x.p - a.x.p; });
+  html += '<ol class="alts">';
+  ranked.forEach(function (a) {
+    const av = verdict(a.x.p);
+    const mine = a.n === order[k];
+    html += '<li class="' + av[1] + (mine ? ' mine' : '') + '">' +
+      '<p class="alt-score ' + av[1] + '">' + a.x.p + ' of 10' + (mine ? ', your answer' : '') + '</p>' +
+      '<p class="alt-text">' + esc(val(a.x.t, f)) + '</p>' +
+      '<p class="alt-why">' + esc(val(a.x.why, f)) + '</p></li>';
+  });
+  html += '</ol>';
+  if (s.real) html += '<div class="real"><span>On the real call</span>' + esc(s.real) + '</div>';
+  app.innerHTML = html + '<button class="go" id="go">Next</button>';
+  document.getElementById("go").onclick = function () { g.i++; scene(); };
+  focusFirst("#go");
+}
+
+function end() {
+  bar.style.width = "100%";
+  const r = result(g);
+  const misses = g.picks.filter(function (x) { return x.p < x.top; })
+    .sort(function (a, b) { return (a.p - a.top) - (b.p - b.top); }).slice(0, 3);
+  let html = '<p class="who">Final score</p><p class="big">' + percent(g) + '%</p>' +
+    '<h1>' + esc(r.label) + '</h1><p>' + esc(r.text) + '</p>';
+  if (misses.length) {
+    html += '<p>Lines to keep for next time:</p><ul class="keep">';
+    misses.forEach(function (m) { html += '<li>' + esc(val(SCENES[m.scene].best, g.flags)) + '</li>'; });
+    html += '</ul>';
+  }
+  app.innerHTML = html + '<button class="go" id="go">Play again</button>';
+  document.getElementById("go").onclick = intro;
+  focusFirst("#go");
+}
+
+document.addEventListener("keydown", function (e) {
+  if (/^[1-4]$/.test(e.key)) { const b = app.querySelector('.opts button[data-k="' + (+e.key - 1) + '"]'); if (b) b.click(); }
+});
+
+// ---------- Self-test: open with #selftest ----------
+function selftest() {
+  const problems = [];
+  function play(pick) {
+    const t = newGame();
+    for (t.i = 0; t.i < SCENES.length; t.i++) {
+      const s = SCENES[t.i];
+      if (isChapter(s)) continue;
+      const said = [val(s.say, t.flags), val(s.best, t.flags)];
+      s.opts.forEach(function (o) { said.push(val(o.t, t.flags), val(o.why, t.flags), val(o.r, t.flags)); });
+      said.forEach(function (x) { if (typeof x !== "string" || !x) problems.push("empty text in scene " + t.i); });
+      choose(t, pick(s.opts));
+    }
+    return t;
+  }
+  const pickBy = function (better) { return function (o) { let b = 0; o.forEach(function (x, k) { if (better(x.p, o[b].p)) b = k; }); return b; }; };
+  const best = play(pickBy(function (a, b) { return a > b; })), worst = play(pickBy(function (a, b) { return a < b; }));
+  const scenes = SCENES.filter(function (s) { return !isChapter(s); });
+  scenes.forEach(function (s, k) {
+    if (s.opts.length !== 4) problems.push("scene " + k + " has " + s.opts.length + " options");
+    if (Math.max.apply(null, s.opts.map(function (o) { return o.p; })) !== 10) problems.push("scene " + k + " has no 10");
+    if (!s.best) problems.push("scene " + k + " has no best line");
+  });
+  const out = { scenes: scenes.length, best: percent(best), bestLabel: result(best).label,
+    worst: percent(worst), worstLabel: result(worst).label, flagsBest: best.flags, problems: problems };
+  document.title = "SELFTEST " + JSON.stringify(out);
+  app.textContent = JSON.stringify(out);
+}
+
+if (location.hash === "#selftest") selftest(); else intro();
+</script>
+</body>
+</html>
