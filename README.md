@@ -12,6 +12,25 @@ Skills for Claude Code.
 | [rebase](skills/rebase/SKILL.md) | Rebases the current branch onto the latest default branch or onto a branch you name, or continues a rebase in progress. Helps with each conflict. Only you can start it, with `/rebase`. |
 | [wrapup](skills/wrapup/SKILL.md) | After the work of a session is on the default branch, deletes the local branch, removes the worktree, and moves the session back to the main checkout. |
 
+## Plugins
+
+| Plugin | Skills | Description |
+| --- | --- | --- |
+| [leads](plugins/leads) | `/leads:setup`, `/leads:prep`, `/leads:practice`, `/leads:review` | Prepares, rehearses, and reviews sales calls with leads, with MEDDPICC. `setup` asks about your offer and your ideal customer profiles, and keeps a lead list in a local folder that you choose. Your data stays in that folder. |
+
+Install a plugin from this repository in Claude Code:
+
+```
+/plugin marketplace add ai-ready-future/skills
+/plugin install leads@ai-ready-future-skills
+```
+
+To test a local copy, start Claude Code with the plugin folder:
+
+```
+$ claude --plugin-dir plugins/leads
+```
+
 ## Install
 
 Link each skill into `~/.claude/skills`. A link to this checkout gets each change after you pull.
@@ -22,22 +41,25 @@ $ for s in bg-watch dispatch handoff osaat rebase wrapup; do ln -s "$PWD/skills/
 
 Run the command from the root of this repository, on `main`.
 
-## Plugins moved
+## sofa moved
 
-The `sofa` and `leads` plugins are now in the [cc-plugins-library](https://github.com/ai-advanced-futures/cc-plugins-library) marketplace. This repository has no plugin marketplace.
+The `sofa` plugin is now in the [cc-plugins-library](https://github.com/ai-advanced-futures/cc-plugins-library) marketplace. The skills of this repository are also in its `skills/` folder.
 
-If you installed them from this repository, remove the old copies, then install them from the new marketplace:
+If you installed sofa from this repository, or as a skill, remove the old copy, then install the plugin from the new marketplace:
 
 ```
 $ claude plugin uninstall sofa@ai-ready-future-skills
-$ claude plugin uninstall leads@ai-ready-future-skills
-$ claude plugin marketplace remove ai-ready-future-skills
+$ npx skills remove sofa
+$ rm -f ~/.claude/skills/sofa
 $ claude plugin marketplace add ai-advanced-futures/cc-plugins-library
 $ claude plugin install sofa@cc-plugins-library
-$ claude plugin install leads@cc-plugins-library
 ```
 
-The `sofa` plugin uses the `bg-watch`, `rebase` and `wrapup` skills of this repository. Install them with the command above.
+The `sofa` plugin uses the `bg-watch`, `rebase` and `wrapup` skills. Install them from this repository with the command above, or from cc-plugins-library:
+
+```
+$ npx skills add ai-advanced-futures/cc-plugins-library --skill bg-watch --skill rebase --skill wrapup
+```
 
 ## Tests
 
@@ -45,4 +67,5 @@ The `sofa` plugin uses the `bg-watch`, `rebase` and `wrapup` skills of this repo
 $ bash skills/bg-watch/tests/bg-watch.test.sh
 $ bash skills/wrapup/tests/branch-landed.test.sh
 $ bash skills/wrapup/tests/self-teardown.test.sh
+$ bash plugins/leads/shared/tests/game-selftest.test.sh
 ```

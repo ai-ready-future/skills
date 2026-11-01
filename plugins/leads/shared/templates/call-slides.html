@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Call deck</title>
+<style>
+  :root {
+    --read: Charter, "Iowan Old Style", Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    --paper: #FCFCFA;
+    --ink: #1C2230;
+    --muted: #667085;
+    --rule: #CBD2DC;
+    --marker: #FFE58F;
+    --accent: #2F4B8A;
+    --track: #DDE1E7;
+    --tick: #C7CDD6;
+    --mark: #98A2B3;
+    --late: #B42318;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--paper); color: var(--ink); }
+  body { font-family: var(--read); -webkit-font-smoothing: antialiased; }
+
+  /* Timeline at the top: planned minute of each slide on a 30-minute line */
+  #progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 68px;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    background: var(--paper);
+  }
+  .plan, .now {
+    width: 6.5em;
+    font: 600 clamp(14px, 1.25vw, 19px)/1 var(--sans);
+    font-variant-numeric: tabular-nums;
+    margin-top: -10px;
+  }
+  .plan { text-align: right; color: var(--ink); }
+  .now { text-align: left; color: var(--muted); }
+  .now.late { color: var(--late); }
+  .timeline { position: relative; width: clamp(300px, 58vw, 980px); height: 42px; }
+  .line, .line-fill { position: absolute; left: 0; top: 12px; height: 3px; border-radius: 2px; }
+  .line { right: 0; background: var(--track); }
+  .line-fill { width: 0; background: var(--accent); transition: width 250ms ease-out; }
+  .minor {
+    position: absolute;
+    top: 10.5px;
+    width: 1px;
+    height: 6px;
+    background: var(--tick);
+    transform: translateX(-50%);
+  }
+  .mark {
+    position: absolute;
+    top: 0;
+    width: 22px;
+    height: 42px;
+    transform: translateX(-50%);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+  .mark::before {
+    content: "";
+    position: absolute;
+    left: 10px;
+    top: 6.5px;
+    width: 2px;
+    height: 14px;
+    background: var(--mark);
+  }
+  .mark span, .end {
+    position: absolute;
+    top: 26px;
+    left: 50%;
+    transform: translateX(-50%);
+    font: 500 12px/1 var(--sans);
+    color: var(--mark);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .end { left: 100%; }
+  .mark[aria-current="true"] span { color: var(--ink); font-weight: 700; }
+  .dot {
+    position: absolute;
+    top: 13.5px;
+    left: 0;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--paper);
+    transform: translate(-50%, -50%);
+    transition: left 250ms ease-out;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .nowline {
+    position: absolute;
+    top: 1px;
+    width: 2px;
+    height: 25px;
+    background: var(--muted);
+    transform: translateX(-50%);
+    transition: left 500ms linear;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .nowline.late { background: var(--late); }
+  .nowline[hidden] { display: none; }
+
+  .slide {
+    position: fixed;
+    inset: 0;
+    padding: calc(68px + 5vh) 8vw 6vh;
+    overflow: hidden;
+    font-size: 28px;
+  }
+  .slide[hidden] { display: none; }
+  .slide.enter { animation: enter 140ms ease-out; }
+  @keyframes enter { from { opacity: 0; } to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) {
+    .slide.enter { animation: none; }
+    .line-fill, .dot, .nowline { transition: none; }
+  }
+
+  .body { max-width: 36em; }
+
+  h2 {
+    font: 600 0.72em/1.3 var(--sans);
+    color: var(--muted);
+    margin: 0 0 1.3em;
+  }
+
+  strong {
+    font-weight: 700;
+    background-image: linear-gradient(transparent 60%, var(--marker) 60%);
+  }
+
+  .say {
+    font-size: 1.08em;
+    line-height: 1.42;
+    border-left: 0.14em solid var(--rule);
+    padding-left: 0.8em;
+    margin: 0 0 0.8em;
+  }
+  .say.if { font-size: 0.95em; margin-left: 1.1em; }
+  .tag {
+    font: 500 0.7em/1 var(--sans);
+    color: var(--muted);
+    margin-right: 0.55em;
+  }
+
+  ul.pts { list-style: none; padding: 0; margin: 0 0 0.6em; line-height: 1.42; }
+  ul.pts > li { position: relative; padding-left: 1em; margin: 0 0 0.55em; }
+  ul.pts > li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.7em;
+    width: 0.45em;
+    height: 0.1em;
+    background: var(--muted);
+  }
+
+  .listen {
+    font: 0.74em/1.5 var(--sans);
+    color: var(--muted);
+    margin: 1.2em 0 0;
+  }
+  .listen strong { color: var(--ink); background: none; font-weight: 650; }
+
+  #overview {
+    position: fixed;
+    inset: 0;
+    background: var(--paper);
+    padding: 6vh 8vw;
+    overflow: auto;
+    z-index: 4;
+  }
+  #overview[hidden] { display: none; }
+  #overview ol {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(16em, 1fr));
+    gap: 0.6em;
+  }
+  #overview button {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 4.6em 1fr;
+    align-items: baseline;
+    text-align: left;
+    font: 500 1.05rem/1.3 var(--sans);
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 0.8em 0.9em;
+    cursor: pointer;
+  }
+  #overview button .m { color: var(--muted); font-variant-numeric: tabular-nums; }
+  #overview button[aria-current="true"] { border-color: var(--accent); }
+  #overview button:hover { border-color: var(--muted); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  #overview p { font: 0.95rem/1.5 var(--sans); color: var(--muted); margin: 1.6em 0 0; }
+
+  @media print {
+    #progress, #overview { display: none !important; }
+    .slide { position: static; display: block !important; height: auto; padding: 4vh 6vw; page-break-after: always; font-size: 16px; }
+  }
+</style>
+</head>
+<body data-minutes="30">
+
+<div id="progress">
+  <span class="plan"></span>
+  <div class="timeline">
+    <div class="line"></div>
+    <div class="line-fill"></div>
+    <div class="nowline" hidden></div>
+    <div class="dot"></div>
+  </div>
+  <span class="now"></span>
+</div>
+
+<!-- SLIDES_START: one <section> for each slide. data-min = the planned minute; data-min="" = any time. -->
+<section class="slide" data-min="0" aria-label="Open">
+  <div class="body">
+    <h2>Open</h2>
+    <p class="say">Do you mind if I <strong>record and transcribe</strong>? I'd like to focus on the conversation.</p>
+    <p class="say">I'd like to <strong>learn about your goals</strong> first, then share <strong>how I'd approach it</strong>, then <strong>next steps</strong>.</p>
+  </div>
+</section>
+
+<section class="slide" data-min="3" aria-label="The target" hidden>
+  <div class="body">
+    <h2>The target, before any number</h2>
+    <p class="say">By <strong>{date}</strong>, what do you expect to be different, and <strong>how will you know</strong>?</p>
+  </div>
+</section>
+
+<section class="slide" data-min="24" aria-label="Price" hidden>
+  <div class="body">
+    <h2>Price</h2>
+    <p class="say">The price is <strong>{price}</strong>. For what we discussed, I recommend <strong>{scope}</strong>.</p>
+    <ul class="pts"><li>Then <strong>stop talking</strong>.</li></ul>
+  </div>
+</section>
+
+<section class="slide" data-min="26" aria-label="Admin and next steps" hidden>
+  <div class="body">
+    <h2>Admin and next steps</h2>
+    <ul class="pts">
+      <li>Who <strong>signs</strong>, and what are the <strong>steps to a contract</strong>?</li>
+      <li><strong>Start date</strong> and <strong>access</strong></li>
+    </ul>
+    <p class="say">What are the <strong>next steps</strong>, and can we put a <strong>date</strong> on it now?</p>
+  </div>
+</section>
+<!-- SLIDES_END -->
+
+<nav id="overview" hidden aria-label="All slides">
+  <ol></ol>
+  <p>Arrow keys or space to move. Home and End jump to the first and last slide. Click a minute on the line at the top to jump to that slide. Press o or Esc for this list. The timer starts each time you move past the first slide. Press t to restart it.</p>
+</nav>
+
+<script>
+(() => {
+  const CALL_MINUTES = Number(document.body.dataset.minutes || 30);
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const minuteOf = (slide) => slide.dataset.min === '' ? null : Number(slide.dataset.min);
+  const titleOf = (slide) => slide.querySelector('h2').textContent;
+  const overview = document.getElementById('overview');
+  const list = overview.querySelector('ol');
+  const timeline = document.querySelector('#progress .timeline');
+  const lineFill = timeline.querySelector('.line-fill');
+  const dot = timeline.querySelector('.dot');
+  const nowLine = timeline.querySelector('.nowline');
+  const planLabel = document.querySelector('#progress .plan');
+  const nowLabel = document.querySelector('#progress .now');
+  const pct = (min) => (Math.max(0, Math.min(min, CALL_MINUTES)) / CALL_MINUTES * 100) + '%';
+
+  for (let m = 0; m <= CALL_MINUTES; m++) {
+    const minor = document.createElement('div');
+    minor.className = 'minor';
+    minor.style.left = pct(m);
+    timeline.insertBefore(minor, nowLine);
+  }
+  const endLabel = document.createElement('span');
+  endLabel.className = 'end';
+  endLabel.textContent = CALL_MINUTES;
+  timeline.appendChild(endLabel);
+  let current = 0;
+  let lastTimed = 0;
+  const START_KEY = 'call-start:' + document.title;
+  let startedAt = null;
+  const saved = Number(localStorage.getItem(START_KEY));
+  if (saved && Date.now() - saved < 3 * 3600 * 1000) startedAt = saved;
+
+  function startTimer() {
+    startedAt = Date.now();
+    localStorage.setItem(START_KEY, String(startedAt));
+    updateClock();
+  }
+
+  const ticks = [];
+  slides.forEach((slide, n) => {
+    const min = minuteOf(slide);
+
+    const li = document.createElement('li');
+    const button = document.createElement('button');
+    button.type = 'button';
+    const m = document.createElement('span');
+    m.className = 'm';
+    m.textContent = min === null ? 'any time' : min + ' min';
+    const t = document.createElement('span');
+    t.textContent = titleOf(slide);
+    button.append(m, t);
+    button.addEventListener('click', () => { closeOverview(); show(n); });
+    li.appendChild(button);
+    list.appendChild(li);
+
+    if (min !== null) {
+      const mark = document.createElement('button');
+      mark.type = 'button';
+      mark.className = 'mark';
+      mark.style.left = pct(min);
+      mark.setAttribute('aria-label', 'Go to ' + titleOf(slide) + ', minute ' + min);
+      mark.title = min + ' min: ' + titleOf(slide);
+      const label = document.createElement('span');
+      label.textContent = min;
+      mark.appendChild(label);
+      mark.addEventListener('click', () => show(n));
+      timeline.insertBefore(mark, nowLine);
+      ticks[n] = mark;
+    }
+  });
+  const buttons = Array.from(list.querySelectorAll('button'));
+
+  function nextTimedMinute(n) {
+    for (let k = n + 1; k < slides.length; k++) {
+      const min = minuteOf(slides[k]);
+      if (min !== null) return min;
+    }
+    return CALL_MINUTES;
+  }
+
+  function updateClock() {
+    const min = minuteOf(slides[current]);
+    planLabel.textContent = min === null ? 'any time' : 'minute ' + min;
+    if (startedAt === null) {
+      nowLabel.textContent = '';
+      nowLine.hidden = true;
+      return;
+    }
+    const exact = (Date.now() - startedAt) / 60000;
+    const elapsed = Math.floor(exact);
+    const late = min !== null && elapsed >= nextTimedMinute(current);
+    nowLabel.textContent = 'now ' + elapsed;
+    nowLabel.classList.toggle('late', late);
+    nowLine.hidden = false;
+    nowLine.style.left = pct(exact);
+    nowLine.classList.toggle('late', late);
+  }
+
+  function updateProgress() {
+    const min = minuteOf(slides[current]);
+    if (min !== null) lastTimed = min;
+    lineFill.style.width = pct(lastTimed);
+    dot.style.left = pct(lastTimed);
+    ticks.forEach((tick, k) => { if (tick) tick.setAttribute('aria-current', k === current ? 'true' : 'false'); });
+    updateClock();
+  }
+
+  function baseSize() {
+    return Math.max(16, Math.min(32, window.innerWidth / 40, window.innerHeight / 23));
+  }
+
+  function fit(slide) {
+    let size = baseSize();
+    slide.style.fontSize = size + 'px';
+    while ((slide.scrollHeight > slide.clientHeight || slide.scrollWidth > slide.clientWidth) && size > 12) {
+      size -= 0.5;
+      slide.style.fontSize = size + 'px';
+    }
+  }
+
+  function show(n, animate = true) {
+    const previous = current;
+    current = Math.max(0, Math.min(slides.length - 1, n));
+    if (animate && previous === 0 && current > 0) startTimer();
+    slides.forEach((slide, k) => {
+      slide.hidden = k !== current;
+      slide.classList.toggle('enter', animate && k === current);
+    });
+    fit(slides[current]);
+    updateProgress();
+    history.replaceState(null, '', '#' + (current + 1));
+  }
+
+  function openOverview() {
+    buttons.forEach((b, k) => b.setAttribute('aria-current', k === current ? 'true' : 'false'));
+    overview.hidden = false;
+    buttons[current].focus();
+  }
+  function closeOverview() { overview.hidden = true; }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key;
+    if (k === 'o' || k === 'Escape') {
+      e.preventDefault();
+      overview.hidden ? openOverview() : closeOverview();
+      return;
+    }
+    if (k === 't') { startTimer(); return; }
+    if (!overview.hidden) return;
+    if (k === 'ArrowRight' || k === 'ArrowDown' || k === 'PageDown' || (k === ' ' && !e.shiftKey)) {
+      e.preventDefault(); show(current + 1);
+    } else if (k === 'ArrowLeft' || k === 'ArrowUp' || k === 'PageUp' || (k === ' ' && e.shiftKey)) {
+      e.preventDefault(); show(current - 1);
+    } else if (k === 'Home') {
+      e.preventDefault(); show(0);
+    } else if (k === 'End') {
+      e.preventDefault(); show(slides.length - 1);
+    }
+  });
+
+  let touchX = null;
+  document.addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    if (touchX === null) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 50) show(current + (dx < 0 ? 1 : -1));
+    touchX = null;
+  });
+
+  window.addEventListener('resize', () => fit(slides[current]));
+  window.addEventListener('hashchange', () => {
+    const n = parseInt(location.hash.slice(1), 10);
+    if (!Number.isNaN(n) && n - 1 !== current) show(n - 1);
+  });
+  setInterval(updateClock, 10000);
+
+  const start = parseInt(location.hash.slice(1), 10);
+  show(Number.isNaN(start) ? 0 : start - 1, false);
+})();
+</script>
+</body>
+</html>
