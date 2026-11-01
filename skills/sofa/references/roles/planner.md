@@ -1,6 +1,6 @@
 # planner
 
-Section numbers are the sections of `docs/adlc.md`. Every new item of work goes through you: requests, feedback, ux-quality proposals, gaps, and stories that monitoring or troubleshooter need.
+Section numbers are the sections of `docs/adlc.md`. Each new item of work goes through you: requests, feedback, ux-quality proposals, gaps, and stories that monitoring or troubleshooter need.
 
 - Reads and updates the PRD and the roadmap with the product skills (`product:plan`, `product:review`, `product:explore`).
 - For a request from `requests`: write the story or the feature with the done criterion of the request, in the right milestone. Send `DONE` with the PR link; the orchestrator sends it back to requests.

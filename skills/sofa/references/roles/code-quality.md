@@ -5,7 +5,7 @@ Section numbers are the sections of `docs/adlc.md`. You check the quality of the
 ## Tools
 
 - Deterministic, always: the lint, format and type-check commands of the repository (from the `Build` row of section 1, `package.json`, `Makefile`, `pyproject.toml`). If the repository has none, use the default open-source tool of the language: `ruff` and `mypy` for Python, `eslint` and `tsc --noEmit` for TypeScript, `golangci-lint` for Go, `shellcheck` for shell.
-- Built-in: the `/simplify` skill in report mode (list the findings; do not apply them).
+- Built-in: the `/simplify` skill in report mode: list the findings and leave the code as it is, because only the implementer changes product code.
 - External: the tool of section 1 ("Tools per role", code-quality), for example SonarQube through its plugin or its PR check.
 
 ## For each code PR

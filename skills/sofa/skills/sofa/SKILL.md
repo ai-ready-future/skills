@@ -32,7 +32,7 @@ A change that all repositories need goes to `ai-ready-future/skills` as an issue
 
 Run the `sofa:readiness` skill. If it reports a `missing` item that blocks the start (marked `blocks start`), tell the user to run `/sofa:setup` and stop. Other missing items go in the `DONE` report at the end, so the user can fix them later with `/sofa:setup`.
 
-Find the machine values of this start. They go only in the start prompts, never in `docs/adlc.md`:
+Find the machine values of this start. They go only in the start prompts, because they differ on each machine that shares `docs/adlc.md`:
 
 - Main folder: `git rev-parse --show-toplevel` in the main checkout, not in a worktree.
 - Skill folder: the absolute path of the plugin root.
@@ -52,7 +52,7 @@ The result: `docs/adlc.md` and `docs/adlc/roles/` on `main` meet the current `te
 ## Step 3 — Start the orchestrator
 
 1. Pull `main` in the main folder. Read `docs/adlc.md`. Make sure `.git/info/exclude` has the line `.sofa/`. Run `<skill folder>/scripts/sofa-state init` from the main folder.
-2. If `ListAgents` shows a live session with the orchestrator name, tell the user that the team runs, and how to open it (step 3.5). Stop, because a second orchestrator starts a second team.
+2. If `ListAgents` shows a live session with the orchestrator name, tell the user that the team runs, and how to open it (item 5). Stop, because a second orchestrator starts a second team.
 3. Write this start prompt to a temporary file, with the machine values of step 1, and start the orchestrator from the main folder with `<skill folder>/scripts/dispatch.sh --adlc docs/adlc.md --role orchestrator --prompt-file <file>`:
 
    ```

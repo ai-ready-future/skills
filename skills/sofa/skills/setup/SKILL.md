@@ -49,7 +49,7 @@ Show the cron line of `references/roles/scheduler.md` with the machine values fi
 ## Step 5 — Slack (optional, any time)
 
 1. The user installs the Slack plugin (`$ claude plugin install slack@claude-plugins-official`) and makes a Slack app with a bot token (`slack:create-slack-app` helps). Scopes: `chat:write`, `channels:history`, `channels:read`, `reactions:read`, `users:read`.
-2. The token goes in the environment (`SLACK_BOT_TOKEN`) or in `~/.claude/settings.json` under `env`. Never in the repository. Never print it.
+2. The token goes in the environment (`SLACK_BOT_TOKEN`) or in `~/.claude/settings.json` under `env`. It stays out of the repository and out of all output, because transcripts and PRs are not private.
 3. Write the channel into section 1 (`Slack`) through a PR.
 4. Send a test message to the channel and ask the user to react with ✅. Check the reaction.
 

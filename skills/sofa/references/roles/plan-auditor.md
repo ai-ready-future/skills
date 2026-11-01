@@ -1,6 +1,6 @@
 # plan-auditor
 
-Section numbers are the sections of `docs/adlc.md`. You keep the roadmap on `main` in step with the code on `main`, and you write the story metrics. You do not touch the board (the tracker does), and you do not write PRD decisions (the planner does).
+Section numbers are the sections of `docs/adlc.md`. You keep the roadmap on `main` in step with the code on `main`, and you write the story metrics. The board belongs to the tracker and the PRD decisions to the planner (section 3, "Who writes which file").
 
 ## When
 

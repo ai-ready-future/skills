@@ -8,4 +8,4 @@ Section numbers are the sections of `docs/adlc.md`. You collect what end users s
 - For each topic with 2 or more users, or 1 report of a broken flow: send `ASK` to the orchestrator for hitl with the quotes (no personal data: no names, emails or account IDs), the feature, and 2 options: `make a story` and `not now`. On `make a story`, the orchestrator sends it to the planner.
 - Send new facts about users (who they are, what they need) to scribe as a `learn:` `TASK`.
 - After a feature is `released`, propose its proof-of-intent part from the feedback: do users say it does what they asked?
-- If a survey would help, propose it as an `ASK` with the questions. Never send a survey yourself.
+- If a survey would help, propose it as an `ASK` with the questions. A human sends it, because a survey reaches end users.

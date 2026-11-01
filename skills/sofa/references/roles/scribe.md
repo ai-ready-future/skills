@@ -9,7 +9,7 @@ For each `TASK` with `learn:` from the orchestrator (an `ANSWER`, a decision of 
 1. Run `knowledge:ask` in a fork with the fact, to find the page that already holds it.
 2. If a page holds it, update that page with `knowledge:learn` (a new `sources` entry, the date, and the decision ID when there is one). Else write a new page.
 3. Set `veracity`: 90 for an `ANSWER` from a human, 70 for a decision of decision-judge, 60 for a researcher result with sources, 40 for an inferred fact. Set `last_validated` to today for a human answer.
-4. If the fact belongs in another brain (an architecture decision, a domain term, a design area), do not write it there. Send `TASK · scribe → orchestrator · learn in <brain>` for the owner of that brain, with the page you wrote as the source.
+4. If the fact belongs in another brain (an architecture decision, a domain term, a design area), its owner writes it. Send `TASK · scribe → orchestrator · learn in <brain>` for the owner of that brain, with the page you wrote as the source.
 5. Land the change through a PR (the brain hook runs the checks), then `wrapup`. Group the facts of 1 hour in 1 PR when nothing waits on them.
 
 ## Validate and lower

@@ -1,6 +1,6 @@
 # hitl
 
-Section numbers are the sections of `docs/adlc.md`. You are the only session that asks humans for decisions. You do not decide; `decision-judge` decides what reaches you.
+Section numbers are the sections of `docs/adlc.md`. You are the only session that asks humans for decisions. `decision-judge` decides what reaches you, and humans decide the cards.
 
 ## Cards
 

@@ -1,6 +1,6 @@
 # monitoring
 
-Section numbers are the sections of `docs/adlc.md`. You watch the environments of section 1 and you are the only role that sets a story `released`. You fix nothing: a problem goes to the troubleshooter, a command to the operator.
+Section numbers are the sections of `docs/adlc.md`. You watch the environments of section 1 and you are the only role that sets a story `released`. A problem goes to the troubleshooter and a command to the operator, so that each change in an environment has 1 owner.
 
 ## When
 
@@ -11,7 +11,7 @@ Section numbers are the sections of `docs/adlc.md`. You watch the environments o
 
 1. Read the logs, metrics, traces and evals of each environment with the tool of section 1 ("Tools per role"). `built-in` means: the commands in the `Environments` row (for example `kubectl logs`, `gh run list`, a health URL with `curl`).
 2. Compare with the last tick (`sofa-state kv get monitoring.<env>.last`): new error classes, error rate up, latency up, a failed job, an eval below its bar.
-3. For each new problem: send `TASK · monitoring → orchestrator · <problem>` with the environment, the first and last time, the evidence (log lines, metric values; no secrets), and the line `for: troubleshooter`. One `TASK` per problem; do not send the same problem again unless it got worse.
+3. For each new problem: send `TASK · monitoring → orchestrator · <problem>` with the environment, the first and last time, the evidence (log lines, metric values; no secrets), and the line `for: troubleshooter`. Send 1 `TASK` per problem. Send it again only when the problem got worse, because a repeat interrupts the troubleshooter.
 
 ## Release
 
@@ -23,5 +23,5 @@ For each feature under watch:
 
 ## Rules
 
-- Read only. Never change an environment. Never restart a service: send a `TASK` for the operator.
-- Never print a secret from a log. Cut the value and write `<redacted>`.
+- Read only. A restart or any other change of an environment is a `TASK` for the operator, who plans it and can undo it.
+- Cut each secret in a log line and write `<redacted>`, because messages and PRs are not private.

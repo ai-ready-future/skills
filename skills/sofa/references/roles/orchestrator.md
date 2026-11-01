@@ -6,9 +6,9 @@ Section numbers are the sections of `docs/adlc.md`. The `sofa:station` skill app
 
 The `sofa` skill starts this session. Its start prompt gives the launcher name and the machine values (main folder, skill folder, GitHub account).
 
-The start is complete when each `always` role of section 3 has 1 live session that sent `DONE · ready`, the status check runs (`/loop 10m`, see "Status check"), and the launcher has a `DONE` with the names of the live sessions. Start each session with the dispatch script (section 8), with the machine values of your start prompt in its start prompt. Do not start `on demand` roles at start; start them when an item needs them. If the board tool access needs a user step (for example a token scope), start chores first.
+The start is complete when each `always` role of section 3 has 1 live session that sent `DONE · ready`, the status check runs (`/loop 10m`, see "Status check"), and the launcher has a `DONE` with the names of the live sessions. Start each session with the dispatch script (section 8), with the machine values of your start prompt in its start prompt. Start `on demand` roles when an item needs them, because an idle session costs tokens. If the board tool access needs a user step (for example a token scope), start chores first.
 
-Before you start a session, read the state store (`sofa-state report --json`). It holds the status of an earlier orchestrator of this team. Continue its open items. A session of the team that `ListAgents` shows as live is already started: send it a `RELOAD`, and do not start a second session for its role.
+Before you start a session, read the state store (`sofa-state report --json`). It holds the status of an earlier orchestrator of this team. Continue its open items. A session of the team that `ListAgents` shows as live is already started: send it a `RELOAD`. A second session of the same role would take the same items.
 
 The `scheduler` is a system cron job, not a session. If `crontab -l` has no `bg-watch check` line, send a `TASK` to chores to run `sofa:setup`.
 
@@ -17,7 +17,6 @@ The `scheduler` is a system cron job, not a session. If `crontab -l` has no `bg-
 - Keep a queue of features in roadmap order (`sofa-state queue set ...`).
 - Make sure that a feature is claimed by this team on the board before you assign it to a specifier (tracker role file). If the tracker reports that another team has the feature, take the next ready feature. If all ready features belong to other teams, send a `BLOCKED · decision` for decision-judge with the priority `blocks code now`, and wait.
 - As soon as a story gets the state `ready` on `main`, assign its spec to an implementer at once.
-- Start a feature only when the features it depends on are `done` or `released`, unless an `ANSWER` allows an early start (rule 1).
 - Run 2 features at the same time only if they change different areas.
 - Send each code PR to a reviewer, a verifier, security and code-quality at the same time. Send a document PR or a test PR only to a reviewer. When the 4 `REVIEW` results are in and all say `APPROVE`, send the PR to the merger.
 - Send the test scenarios of each verifier to the tester.
@@ -30,11 +29,9 @@ The `scheduler` is a system cron job, not a session. If `crontab -l` has no `bg-
 - Use the sessions again. Send each new item to a free live session of its role. Start a new session only if no session of the role is free and the role has fewer sessions than its Count. A session is free when it sent `DONE` for its last item and has no open item in the store.
   - Keep 1 session of each `always` role live, also when it has no work.
   - If an `on demand` session has been free for 1 hour, stop it (`claude stop <id>`) and delete it (`claude rm <id>`). Then its number is free again.
-- After a retro merge, send `RELOAD` to every live session.
 - On a `TASK · updater → orchestrator · reload`, restart each live session of the roles it lists when the session is free: `claude stop <id>`, then the dispatch script with `--resume <id>`. A message with `/reload-skills` or `/reload-plugins` does not run the command (updater role file).
 - After a PR that changes `docs/product` merges, send a `SYNC` to the tracker and a `TASK` to plan-auditor.
 - When a feature is `done`, send a `TASK` to the operator (deploy, if the environments need a step) and to monitoring (watch it for the healthy window).
-- Keep the status in the state store, not in the repo. Write each change of an item or a session with `sofa-state`.
 
 ## Status check
 
@@ -44,7 +41,7 @@ Every 10 minutes (`/loop 10m`). The result: the store matches the live sessions,
 - Its last status says that it waits for the user, an input or an answer, and no `ASK` or `BLOCKED` of it is open.
 - It is busy and its heartbeat or timeline has no new line for 30 minutes.
 
-Restarts of stopped sessions are the work of the `scheduler` (cron, `bg-watch`). Resume a session yourself only if it has an open item and the scheduler did not restart it in 15 minutes (section 8). The check sends no other messages, because each message interrupts the work of a session.
+The `scheduler` restarts stopped sessions (section 8). The check sends no other messages, because each message interrupts the work of a session.
 
 ## Commands from humans
 

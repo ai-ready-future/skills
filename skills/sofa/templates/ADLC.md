@@ -29,7 +29,7 @@ The `sofa:setup` skill fills these values. They are the same on each machine tha
 | Environments | `<name: how to reach it, how to deploy, where the logs and metrics are; one line per environment, or none>` |
 | Healthy window | `24h` (how long a feature must run as expected in production before `monitoring` sets it `released`) |
 | Reference program | `<a program whose behavior is a source for inferred rows, with its pinned version, or none>` |
-| Slack | `<channel name, or none>` (the token is in the environment, never here) |
+| Slack | `<channel name, or none>` (the token is in the environment, never in this file, because this file is in the repository) |
 
 Tools per role. `built-in` means the role uses only the skills of its row.
 
@@ -53,9 +53,7 @@ Repository rules:
 
 ## 2. Rules for all sessions
 
-The rules that are the same for all roles are in the `sofa:station` skill, which every session loads at start. In short: stay in your role, ask the brains first, change `main` only through a PR, send each message to the orchestrator in the format of section 5, end each turn with 1 message, send `BLOCKED` at once when you cannot continue, write your state to the state store, and end each PR with the Proofs block.
-
-Rules that are only in this file:
+The rules that are the same for all roles are in the `sofa:station` skill, which every session loads at start. Rules that are only in this file:
 
 1. A story has the state `ready` only if all of these are true:
     - Its spec is merged on `main`.
@@ -104,22 +102,15 @@ Tier: `always` sessions start with the team and stay live. `on demand` sessions 
 | updater | `on demand` | `orange` | `claude-haiku-5-5` | `low` | `200k` | `Concise` | 1 | Once a day | station, loop | Installed versions | Updated skills and plugins, reload requests |
 | chores | `on demand` | `yellow` | `claude-sonnet-5-5` | `medium` | `300k` | `Concise` | 1 | A manual step is necessary | station | Chore request | Checked state |
 
-Model and Effort: use the exact values in the table.
-
 Compact at: the size of the context window at which the session compacts its conversation by itself (`--autocompact`, section 8). The value comes from the model: `400k` for Opus, `300k` for Sonnet, `200k` for Haiku. A new row, or a row that changes its model, takes the value of its model.
 
 Output style: a built-in style of Claude Code, passed with `--settings '{"outputStyle":"<style>"}'`. The names are `Proactive`, `Concise`, `Explanatory` and `Learning`, case-sensitive.
 
-Colour: the session colour that the built-in `/color` sets. It shows in the prompt border and in `claude agents`. The names are `red`, `blue`, `green`, `yellow`, `purple`, `orange`, `pink` and `cyan`. The mod of the `sofa` plugin sets it when a session starts: it reads this table, and finds the role in the session name (`<prefix>-<role>[-n]`).
+Colour: the session colour that the built-in `/color` sets, from the session name (`<prefix>-<role>[-n]`), when the session starts. The names are `red`, `blue`, `green`, `yellow`, `purple`, `orange`, `pink` and `cyan`.
 
 ### Role files
 
-The work of each role is in its role files. A session reads them after this file:
-
-1. The skill role file: `<skill folder>/references/roles/<role>.md`.
-2. The repository role file: `docs/adlc/roles/<role>.md`, if it exists. The retro writes it.
-
-Where the two files differ, the repository role file wins. A role that is only in this repository has only a repository role file.
+The work of each role is in `<skill folder>/references/roles/<role>.md` and, if it exists, `docs/adlc/roles/<role>.md` (the retro writes it). Where the two files differ, the repository role file wins. A role that is only in this repository has only a repository role file.
 
 ### Who writes which file
 
@@ -372,11 +363,11 @@ The script reads the row of the role in section 3 and runs:
 claude --bg -n <prefix>-<role>[-n] --model <model> [--effort <effort>] --autocompact <compact at> --settings '{"outputStyle":"<output style>"}' --permission-mode bypassPermissions "<start prompt>"
 ```
 
-It prints the session id and the name. Give each session a name that no other session of this repository has, live or stopped (`claude agents --json --all`). The first session of a role has no number. The next sessions take the lowest free number, from `-2`. A session that the orchestrator deleted (`claude rm`) is not in that list, so its number is free again.
+It prints the session id and the name. The orchestrator gives each session a name that no other session of this repository has, live or stopped (`claude agents --json --all`). The first session of a role has no number. The next sessions take the lowest free number, from `-2`. A session that the orchestrator deleted (`claude rm`) is not in that list, so its number is free again.
 
 A live session does not change its colour, model, effort, compact value or output style after `RELOAD`. If section 3 changes one of them, restart each session of that role when it has no work.
 
-If a session stops before its item is done, the `scheduler` (system cron, `bg-watch check`) restarts it and sends it `retry`. If the orchestrator finds a stopped session with an open item that the scheduler did not restart, it resumes it with the dispatch script and `--resume <session id>` and the prompt `You were resumed. Continue your open item.` If the resume fails, it starts a new session.
+If a session stops before its item is done, the `scheduler` (system cron, `bg-watch check`) restarts it and sends it `retry`. If the orchestrator finds a stopped session with an open item that the scheduler did not restart in 15 minutes, it resumes it with the dispatch script and `--resume <session id>` and the prompt `You were resumed. Continue your open item.` If the resume fails, it starts a new session.
 
 Start prompt:
 
