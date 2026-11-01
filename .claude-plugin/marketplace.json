@@ -1,12 +1,19 @@
 {
   "name": "ai-ready-future-skills",
-  "owner": { "name": "ai-ready-future" },
-  "metadata": { "description": "Skills and plugins of ai-ready-future", "version": "1.0.0" },
+  "description": "Claude Code plugins from this repository.",
+  "owner": {
+    "name": "AI Ready Future"
+  },
   "plugins": [
     {
+      "name": "leads",
+      "source": "./plugins/leads",
+      "description": "Prepare, rehearse, and review sales calls with leads, with MEDDPICC."
+    },
+    {
       "name": "sofa",
-      "description": "Software factory: a team of Claude Code background sessions that build a product from the PRD and roadmap of a repository.",
       "source": "./skills/sofa",
+      "description": "Software factory: a team of Claude Code background sessions that build a product from the PRD and roadmap of a repository.",
       "strict": false
     }
   ]

@@ -10,8 +10,27 @@ Skills for Claude Code.
 | [handoff](skills/handoff/SKILL.md) | Writes a handoff document in the reply, so that a new agent can continue the work of this conversation. |
 | [osaat](skills/osaat/SKILL.md) | One step at a time. Does a series of steps one by one, and asks the user to approve each step first. |
 | [rebase](skills/rebase/SKILL.md) | Rebases the current branch onto the latest default branch or onto a branch you name, or continues a rebase in progress. Helps with each conflict. Only you can start it, with `/rebase`. |
-| [sofa](skills/sofa/skills/sofa/SKILL.md) | Software factory, as a plugin. Starts a team of 29 Claude Code roles that build a product from the PRD and the roadmap of a repository. Includes `sofa:station`, `sofa:readiness`, `sofa:setup`, `sofa:maturity`, the `/sofa:*` commands, and a dashboard pane. |
 | [wrapup](skills/wrapup/SKILL.md) | After the work of a session is on the default branch, deletes the local branch, removes the worktree, and moves the session back to the main checkout. |
+
+## Plugins
+
+| Plugin | Skills | Description |
+| --- | --- | --- |
+| [leads](plugins/leads) | `/leads:setup`, `/leads:prep`, `/leads:practice`, `/leads:review` | Prepares, rehearses, and reviews sales calls with leads, with MEDDPICC. `setup` asks about your offer and your ideal customer profiles, and keeps a lead list in a local folder that you choose. Your data stays in that folder. |
+| [sofa](skills/sofa) | `/sofa:sofa`, `/sofa:setup`, `/sofa:readiness`, `/sofa:maturity`, `/sofa:status`, `/sofa:request`, `/sofa:pause`, `/sofa:resume`, `/sofa:handoff`, `/sofa:stop` | Software factory. Starts a team of 29 Claude Code roles that build a product from the PRD and the roadmap of a repository, with a state store and a dashboard pane. |
+
+Install a plugin from this repository in Claude Code:
+
+```
+/plugin marketplace add ai-ready-future/skills
+/plugin install leads@ai-ready-future-skills
+```
+
+To test a local copy, start Claude Code with the plugin folder:
+
+```
+$ claude --plugin-dir plugins/leads
+```
 
 ## Install
 
@@ -50,4 +69,5 @@ $ bash skills/sofa/tests/dispatch.test.sh
 $ bash skills/sofa/tests/sofa-state.test.sh
 $ bash skills/sofa/tests/readiness.test.sh
 $ claude plugin test skills/sofa
+$ bash plugins/leads/shared/tests/game-selftest.test.sh
 ```
