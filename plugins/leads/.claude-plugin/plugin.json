@@ -1,6 +1,0 @@
-{
-  "name": "leads",
-  "version": "0.1.0",
-  "description": "Prepare, rehearse, and review sales calls with leads, with MEDDPICC. Keeps a local lead list, one deal file for each lead, and a habits file that gets better with each call.",
-  "keywords": ["sales", "leads", "meddpicc", "call prep", "call review"]
-}
