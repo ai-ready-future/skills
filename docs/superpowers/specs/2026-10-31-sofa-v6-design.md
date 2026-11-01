@@ -130,7 +130,7 @@ Renames: `prd:*` → `product:*`, `adr:*` → `architecture:*`, `pr-flow:reviewi
 
 ## 11. dispatch and scheduler
 
-- `scripts/dispatch.sh <role> [n] <prompt-file>`: reads the row of the role from `docs/adlc.md`, starts `claude --bg -n <prefix>-<role>[-n] --model --effort --autocompact --settings '{"outputStyle":"..."}' --permission-mode bypassPermissions "<prompt>"`, prints the session id. Tests: a fake `claude` in `tests/fake/`, and 1 real smoke test that proves `--settings` reaches the bg session.
+- `scripts/dispatch.sh --adlc <path> --role <role> [--n N] (--prompt-file F | --prompt T) [--resume ID] [--cwd DIR] [--dry-run]`: reads the row of the role from the ADLC file, starts `claude --bg -n <prefix>-<role>[-n] --model --effort --autocompact --settings '{"outputStyle":"..."}' --permission-mode bypassPermissions "<prompt>"`, prints `<session id> <session name>`. Tests: a fake `claude` in `tests/fake/`, and 1 real smoke test that proves `--settings` reaches the bg session.
 - `scheduler`: a crontab line every 5 minutes runs `claude -p --model haiku "/bg-watch check"` outside any long session. `setup` installs it. The orchestrator status check keeps only the work status (stuck items), not restarts.
 
 ## 12. State store, dashboard, commands

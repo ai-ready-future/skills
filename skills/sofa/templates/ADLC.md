@@ -101,7 +101,7 @@ Tier: `always` sessions start with the team and stay live. `on demand` sessions 
 | operator | `on demand` | `blue` | `claude-sonnet-5-5` | `medium` | `300k` | `Concise` | 1 | A command must run in an environment | station | Runbook task | Command results |
 | feedback | `on demand` | `blue` | `claude-haiku-5-5` | `medium` | `200k` | `Concise` | 1 | A feedback source exists (every 2 hours) | station, loop | Feedback sources | `TASK` suggestions |
 | ux-quality | `on demand` | `blue` | `claude-sonnet-5-5` | `medium` | `300k` | `Concise` | 1 | A ux tool exists (every 4 hours) | station, loop | Sentry or PostHog data | `TASK` suggestions |
-| updater | `on demand` | `orange` | `claude-haiku-5-5` | `low` | `200k` | `Concise` | 1 | Once a day | station, loop | Installed versions | Updated skills and plugins, `RELOAD` requests |
+| updater | `on demand` | `orange` | `claude-haiku-5-5` | `low` | `200k` | `Concise` | 1 | Once a day | station, loop | Installed versions | Updated skills and plugins, reload requests |
 | chores | `on demand` | `yellow` | `claude-sonnet-5-5` | `medium` | `300k` | `Concise` | 1 | A manual step is necessary | station | Chore request | Checked state |
 
 Model and Effort: use the exact values in the table.
@@ -127,7 +127,7 @@ Where the two files differ, the repository role file wins. A role that is only i
 |---|---|
 | PRD, roadmap stories and features | planner |
 | Specs | specifier |
-| Story and feature metrics, missing roadmap stories | plan-auditor |
+| Story and feature metrics (`docs/adlc/metrics/` until the `product` plugin takes them), missing roadmap stories | plan-auditor |
 | Board | tracker |
 | `adr` brain (`docs/adr`) | architect |
 | `system-design` brain, nested `CLAUDE.md` routers, `.claude/rules` | designer |

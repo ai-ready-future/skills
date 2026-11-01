@@ -2,6 +2,8 @@
 name: readiness
 description: 'Check if a repository is ready for a sofa team, and print what must be configured. Read-only: it changes nothing. Use when the user says "sofa readiness", "is this repo ready for sofa", "what does sofa need", or before /sofa:setup and the sofa launcher.'
 allowed-tools: Bash(python3 *) Bash(${CLAUDE_SKILL_DIR}/../../scripts/readiness.py *)
+metadata:
+  internal: true
 ---
 
 # readiness — what sofa needs in this repository

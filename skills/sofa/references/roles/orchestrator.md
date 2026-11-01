@@ -31,6 +31,7 @@ The `scheduler` is a system cron job, not a session. If `crontab -l` has no `bg-
   - Keep 1 session of each `always` role live, also when it has no work.
   - If an `on demand` session has been free for 1 hour, stop it (`claude stop <id>`) and delete it (`claude rm <id>`). Then its number is free again.
 - After a retro merge, send `RELOAD` to every live session.
+- On a `TASK · updater → orchestrator · reload`, restart each live session of the roles it lists when the session is free: `claude stop <id>`, then the dispatch script with `--resume <id>`. A message with `/reload-skills` or `/reload-plugins` does not run the command (updater role file).
 - After a PR that changes `docs/product` merges, send a `SYNC` to the tracker and a `TASK` to plan-auditor.
 - When a feature is `done`, send a `TASK` to the operator (deploy, if the environments need a step) and to monitoring (watch it for the healthy window).
 - Keep the status in the state store, not in the repo. Write each change of an item or a session with `sofa-state`.

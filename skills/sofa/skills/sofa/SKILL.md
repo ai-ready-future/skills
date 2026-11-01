@@ -2,6 +2,8 @@
 name: sofa
 description: 'Start a software factory: a team of Claude Code background sessions (orchestrator, hitl, requests, decision-judge, scribe, planner, specifier, implementers, reviewers, verifiers, merger, monitoring and more) that build a product from the PRD and roadmap in a repo. Use when the user says "sofa", "start the team", "spawn the team" or "software factory".'
 disable-model-invocation: true
+metadata:
+  internal: true
 ---
 
 # sofa — software factory

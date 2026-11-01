@@ -1,6 +1,8 @@
 ---
 name: station
 description: 'The base behavior of every session of a sofa team (a station). Each role session loads it at start, before its role files. It holds the rules that are the same for all roles: stay in your role, ask the brains first, the message format, the turn exit rule, blockers, worktrees, the state store, and the Proofs block of each PR. Use when a start prompt says "You are the <role> of the <prefix> team", or when a sofa role file names it.'
+metadata:
+  internal: true
 ---
 
 # station — how every session of the team works
@@ -69,6 +71,7 @@ The state store is `.sofa/state.db` in the main folder (`sofa-state` CLI in `<sk
 - At the end of each turn in which your item changed: `sofa-state item set --id <item> --state <state> [--pr <n>] [--branch <b>] [--worktree <path>] [--waits-for <text>] --session <your name>`.
 - When your item goes to another role (a `REVIEW`, a fix round): `sofa-state item trip --id <item> --from <your role> --to <role>`.
 - When you are free: `sofa-state session free --name <your name>`.
+- After each message you send: `sofa-state message log --type <TYPE> --from <your name> --to <name> --subject <subject id>`. Log the header only, never the body.
 
 Write the state in the store, not in a file of the repository, because it changes every few minutes.
 

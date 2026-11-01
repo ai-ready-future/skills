@@ -2,6 +2,8 @@
 name: setup
 description: 'Configure a repository for a sofa team, 1 item at a time: runs sofa:readiness, then fixes each missing item with the user. Idempotent: run it any time, for example to add Slack or a scanner later. Use when the user says "sofa setup", "set up sofa", "configure sofa", "add slack to sofa".'
 disable-model-invocation: true
+metadata:
+  internal: true
 ---
 
 # setup — make the repository ready for sofa
@@ -42,7 +44,7 @@ Copy `<skill folder>/templates/ADLC.md` to `docs/adlc.md`, fill section 1 and th
 
 ## Step 4 — The scheduler
 
-Show the cron line of `references/roles/scheduler.md` with the machine values filled in. After the user agrees, add it with `(crontab -l 2>/dev/null; echo "<line>") | crontab -`, only if `crontab -l` has no `bg-watch check` line yet.
+Show the cron line of `references/roles/scheduler.md` with the machine values filled in (that file lists them). Make sure that Claude Code trusts the main folder and that `bg-watch` is installed; if not, tell the user the step. After the user agrees, add it with `(crontab -l 2>/dev/null; echo "<line>") | crontab -`, only if `crontab -l` has no `bg-watch check` line yet.
 
 ## Step 5 — Slack (optional, any time)
 

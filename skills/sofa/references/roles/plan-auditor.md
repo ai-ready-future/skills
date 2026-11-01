@@ -24,4 +24,4 @@ When monitoring sets a story `released` (its PR merges), run `sofa-state metrics
 - `product`: 100 if each code PR has a verifier `product` line and monitoring set `released`; 50 if only one of these; else 0.
 - `intent`: the score that hitl confirmed from monitoring and feedback; empty until then.
 
-Until the `product` plugin accepts these fields (they are a handoff item), write them in `docs/product/roadmap/metrics/<story>.json` and name that file in the PR.
+Until the `product` plugin accepts these fields (they are a handoff item), write them in `docs/adlc/metrics/<story>.json` and name that file in the PR.
