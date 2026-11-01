@@ -1,5 +1,6 @@
 {
   "name": "sofa",
-  "version": "0.1.0",
-  "description": "Gives each sofa team session the colour of its role, from the roles table in docs/adlc.md."
+  "version": "6.0.0",
+  "types": "./types/index.d.ts",
+  "description": "Software factory: a team of Claude Code background sessions that build a product from the PRD and roadmap of a repository. Skills sofa, station, readiness, setup, maturity; commands for status, requests, pause, resume, handoff and stop; a mod for role colours, the state store and the dashboard."
 }
