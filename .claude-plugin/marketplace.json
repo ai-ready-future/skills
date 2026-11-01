@@ -9,12 +9,6 @@
       "name": "leads",
       "source": "./plugins/leads",
       "description": "Prepare, rehearse, and review sales calls with leads, with MEDDPICC."
-    },
-    {
-      "name": "sofa",
-      "source": "./skills/sofa",
-      "description": "Software factory: a team of Claude Code background sessions that build a product from the PRD and roadmap of a repository.",
-      "strict": false
     }
   ]
 }
