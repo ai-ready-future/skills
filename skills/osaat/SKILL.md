@@ -5,8 +5,6 @@ description: Execute any series of steps one at a time with explicit confirmatio
 
 # OSAAT (One Step At A Time)
 
-Execute any series of steps one at a time with explicit confirmation between each step.
-
 ## How It Works
 
 Divide the task into small steps. Do no step until the user approves it, and show the result of each step before you ask about the next one. The user can stop, change, or skip any step.
@@ -31,8 +29,7 @@ WHAT THIS IS ABOUT: <The facts that the user needs to answer: what the step does
 Select an alternative to see its pros and cons. <The question again, as the last line, with a question mark.>
 ```
 
-- Set `header` to the ID of the step, for example "QUESTION-43" or "Step 2". Use 12 characters maximum.
-- Do not refer to text outside the question, for example "as shown above", because the user possibly cannot see that text.
+Set `header` to the ID of the step, for example "QUESTION-43" or "Step 2".
 
 Example:
 
@@ -78,8 +75,7 @@ piece says "piece 2 of 3".
 
 Obey these rules for the format:
 
-- Put the recommended option first. Add "(Recommended)" to its `label`. Recommend 1 option only.
 - Make the `label` a short form of the name in the preview, 5 words maximum.
 - In the `description` of each option, write 1 short sentence.
-- Give each alternative 1 pro and 1 con at minimum. Write each pro and each con as 1 short line. Keep each line of the preview to 40 characters maximum. Break a longer line, and indent the next line by 3 spaces after a ✅ or a ❌.
+- Give each alternative 1 pro and 1 con at minimum. Keep each line of the preview to 40 characters maximum. Break a longer line, and indent the next line by 3 spaces after a ✅ or a ❌.
 - If a step has only 1 action, ask "Do this step?" with the options "Yes (Recommended)", "Skip this step", and "Stop". Do not add previews, because there is no alternative to compare. The user can select "Other" to change the step.
