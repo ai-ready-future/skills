@@ -7,7 +7,7 @@ Skills for Claude Code.
 | [bg-watch](skills/bg-watch/SKILL.md) | Watches the background sessions on a schedule. Restarts each session that stopped on an API error, sends it `retry`, and logs each jag decision. |
 | [dispatch](skills/dispatch/SKILL.md) | Forks the current session into a new background session that starts work on one item at once. |
 | [doc-style](skills/doc-style/SKILL.md) | Writing style for docs, README files, PRs, commits, comments, and chat replies. Paraphrased from the Google developer documentation style guide, with reference files that load on demand and an optional Vale check. |
-| [handoff](skills/handoff/SKILL.md) | Writes a handoff document in the reply, so that a new agent can continue the work of this conversation. |
+| [handoff](skills/handoff/SKILL.md) | Writes a handoff document in the reply, so that a new agent can continue the work of this conversation. With `@<session-name>`, sends the document to that session. |
 | [osaat](skills/osaat/SKILL.md) | One step at a time. Does a series of steps one by one, and asks the user to approve each step first. |
 | [rebase](skills/rebase/SKILL.md) | Rebases the current branch onto the latest default branch or onto a branch you name, or continues a rebase in progress. Helps with each conflict. Only you can start it, with `/rebase`. |
 | [sofa](skills/sofa/SKILL.md) | Software factory. Starts a team of Claude Code background sessions that build a product from the PRD and the roadmap of a repository. |
