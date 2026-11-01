@@ -13,6 +13,25 @@ Skills for Claude Code.
 | [sofa](skills/sofa/SKILL.md) | Software factory. Starts a team of Claude Code background sessions that build a product from the PRD and the roadmap of a repository. |
 | [wrapup](skills/wrapup/SKILL.md) | After the work of a session is on the default branch, deletes the local branch, removes the worktree, and moves the session back to the main checkout. |
 
+## Plugins
+
+| Plugin | Skills | Description |
+| --- | --- | --- |
+| [leads](plugins/leads) | `/leads:setup`, `/leads:prep`, `/leads:practice`, `/leads:review` | Prepares, rehearses, and reviews sales calls with leads, with MEDDPICC. `setup` asks about your offer and your ideal customer profiles, and keeps a lead list in a local folder that you choose. Your data stays in that folder. |
+
+Install a plugin from this repository in Claude Code:
+
+```
+/plugin marketplace add ai-ready-future/skills
+/plugin install leads@ai-ready-future-skills
+```
+
+To test a local copy, start Claude Code with the plugin folder:
+
+```
+$ claude --plugin-dir plugins/leads
+```
+
 ## Install
 
 Link each skill into `~/.claude/skills`. A link to this checkout gets each change after you pull.
@@ -29,4 +48,5 @@ Run the command from the root of this repository, on `main`.
 $ bash skills/bg-watch/tests/bg-watch.test.sh
 $ bash skills/wrapup/tests/branch-landed.test.sh
 $ bash skills/wrapup/tests/self-teardown.test.sh
+$ bash plugins/leads/shared/tests/game-selftest.test.sh
 ```
